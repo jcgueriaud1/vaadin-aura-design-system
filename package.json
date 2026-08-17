@@ -12,9 +12,10 @@
     "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
-    "validate": "node scripts/validate-tokens.mjs && node scripts/check-aura-drift.mjs",
+    "validate": "node scripts/validate-tokens.mjs && node scripts/check-aura-drift.mjs && node scripts/check-design-doc.mjs",
     "test": "node --test \"test/**/*.test.mjs\"",
-    "check:aura": "node scripts/check-aura-drift.mjs"
+    "check:aura": "node scripts/check-aura-drift.mjs",
+    "check:design": "node scripts/check-design-doc.mjs"
   },
   "peerDependencies": {
     "@vaadin/react-components": ">=25.0.0"

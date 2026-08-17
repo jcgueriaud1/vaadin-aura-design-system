@@ -158,10 +158,10 @@ Not yet built; tracked in [#7](../../issues/7).
 
 ```
 tokens/tokens.json     DTCG source of truth: Aura's inputs, primitive + semantic
-components/            Canonical @vaadin/react-components examples, one per component
 DESIGN.md              Global rules, written as agent policy
-scripts/               Token validation and the Aura drift check
-test/                  Negative tests for both
+components/            Canonical @vaadin/react-components examples, one per component
+scripts/               Token validation, Aura drift check, DESIGN.md name check
+test/                  Negative tests for all three
 ```
 
 The base deliberately ships **no built CSS**. Overlays resolve base + overrides into their own
@@ -220,16 +220,22 @@ leverage is the reason for keeping the inputs rather than a flattened value set.
 
 ```bash
 npm install
-npm run validate     # DTCG + references + layering contract, then the Aura drift check
-npm run check:aura   # just the drift check against the pinned @vaadin/aura
-npm test             # asserts both still reject what they should
+npm run validate       # all three checks below, in order
+npm run check:aura     # tokens still match the pinned @vaadin/aura
+npm run check:design   # every name DESIGN.md recommends still exists
+npm test               # asserts all three still reject what they should
 ```
 
-`npm test` exists because these two scripts are the contract's only enforcement in this repo, and
-a check that silently passes everything looks exactly like a check that works — which is precisely
+`npm test` exists because these scripts are the contract's only enforcement in this repo, and a
+check that silently passes everything looks exactly like a check that works — which is precisely
 what the original token validation turned out to be. It covers dangling references, a missing
-file, an empty token set, every way the layering contract can be violated, and every way the
-tokens can drift from Aura.
+file, an empty token set, every way the layering contract can be violated, every way the tokens
+can drift from Aura, and stale names in `DESIGN.md`.
+
+That last one matters more than it sounds. `DESIGN.md` is read as authority by agents, and a
+property Aura has since renamed doesn't error — it resolves to nothing and the element renders
+unstyled. `check:design` verifies every property and helper class the document recommends against
+the pinned Aura release, exempting `--lumo-*`, which it names in order to forbid.
 
 Token changes are only correct if every reference resolves, every token stays classified, and the
 tokens still match the pinned Aura release. Removing or renaming a semantic token is a breaking
