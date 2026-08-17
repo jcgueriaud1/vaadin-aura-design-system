@@ -57,4 +57,53 @@ if (tokens.length === 0) {
   process.exit(1);
 }
 
-console.log(`✓ ${source}: ${tokens.length} tokens, valid DTCG, all references resolve`);
+// --- Layering contract -------------------------------------------------
+// The overlay's resolve.mjs rejects overrides that target anything but the
+// semantic layer, so it needs to classify every token it is handed. A token
+// with no layer is unclassifiable, which is why a missing marker is an error
+// rather than an implicit default.
+const NS = 'com.vaadin.aura';
+const LAYERS = ['primitive', 'semantic'];
+
+const layerOf = (token) => token.$extensions?.[NS]?.layer;
+const layers = new Map(tokens.map((t) => [t.path.join('.'), layerOf(t)]));
+const errors = [];
+
+for (const token of tokens) {
+  const path = token.path.join('.');
+  const layer = layers.get(path);
+
+  if (layer === undefined) {
+    errors.push(`${path}: no $extensions['${NS}'].layer — every token must declare its layer`);
+    continue;
+  }
+  if (!LAYERS.includes(layer)) {
+    errors.push(`${path}: layer "${layer}" is not one of ${LAYERS.join(' | ')}`);
+    continue;
+  }
+
+  // A primitive pointing at a semantic token inverts the layering: overriding
+  // that semantic token in an overlay would then silently move a primitive,
+  // which is exactly what the contract exists to prevent.
+  if (layer === 'primitive') {
+    const raw = token.original?.$value;
+    const refs = typeof raw === 'string' ? [...raw.matchAll(/\{([^}]+)\}/g)].map((m) => m[1]) : [];
+    for (const ref of refs) {
+      if (layers.get(ref) === 'semantic') {
+        errors.push(`${path}: primitive references semantic token {${ref}} — layering inverted`);
+      }
+    }
+  }
+}
+
+if (errors.length > 0) {
+  console.error(`\n✗ ${source}: layering contract violated\n`);
+  for (const error of errors) console.error(`  ${error}`);
+  process.exit(1);
+}
+
+const semantic = [...layers.values()].filter((l) => l === 'semantic').length;
+console.log(
+  `✓ ${source}: ${tokens.length} tokens (${semantic} semantic, ${tokens.length - semantic} primitive), ` +
+    `valid DTCG, all references resolve, layering contract holds`,
+);

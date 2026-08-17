@@ -1,0 +1,8 @@
+{
+  "$description": "Fixture: must FAIL. A primitive references a semantic token, inverting the layering.",
+  "color": {
+    "$type": "color",
+    "primary": { "$value": "#2563eb", "$extensions": { "com.vaadin.aura": { "layer": "semantic" } } },
+    "blue": { "600": { "$value": "{color.primary}", "$extensions": { "com.vaadin.aura": { "layer": "primitive" } } } }
+  }
+}

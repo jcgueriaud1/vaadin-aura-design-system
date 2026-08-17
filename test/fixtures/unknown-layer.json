@@ -1,0 +1,7 @@
+{
+  "$description": "Fixture: must FAIL. 'brand' is not a layer; only primitive|semantic exist.",
+  "color": {
+    "$type": "color",
+    "blue": { "600": { "$value": "#2563eb", "$extensions": { "com.vaadin.aura": { "layer": "brand" } } } }
+  }
+}

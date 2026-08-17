@@ -1,0 +1,10 @@
+{
+  "$description": "Fixture: must FAIL. Documents that group-level $extensions is NOT inherited by children (unlike $type). If Style Dictionary ever starts inheriting it, this test flips to passing and the authoring rule in DESIGN.md can be relaxed.",
+  "color": {
+    "$type": "color",
+    "gray": {
+      "$extensions": { "com.vaadin.aura": { "layer": "primitive" } },
+      "50": { "$value": "#fafafa" }
+    }
+  }
+}

@@ -35,3 +35,39 @@ test('rejects a token file with no tokens', () => {
   assert.equal(status, 1, 'an empty token set must not pass as valid');
   assert.match(stderr, /no tokens/);
 });
+
+// --- Layering contract ---------------------------------------------------
+
+test('accepts the base tokens as fully classified', () => {
+  const { stdout } = validate('tokens/tokens.json');
+  assert.match(stdout, /layering contract holds/);
+  assert.match(stdout, /semantic/);
+});
+
+test('rejects a token with no layer marker', () => {
+  const { status, stderr } = validate('test/fixtures/missing-layer.json');
+  assert.equal(status, 1, 'an unclassifiable token must fail');
+  assert.match(stderr, /color\.blue\.600: no \$extensions/);
+});
+
+test('rejects a layer outside primitive|semantic', () => {
+  const { status, stderr } = validate('test/fixtures/unknown-layer.json');
+  assert.equal(status, 1);
+  assert.match(stderr, /layer "brand" is not one of/);
+});
+
+test('rejects a primitive that references a semantic token', () => {
+  const { status, stderr } = validate('test/fixtures/inverted-layer.json');
+  assert.equal(status, 1, 'inverted layering must fail');
+  assert.match(stderr, /layering inverted/);
+});
+
+// Pins the finding that drove the authoring rule: Style Dictionary inherits
+// $type down a group but not $extensions, so a group-level marker leaves its
+// children unclassified. If SD ever changes this, this test fails loudly and
+// the per-token requirement can be revisited.
+test('group-level $extensions does not classify children', () => {
+  const { status, stderr } = validate('test/fixtures/group-level-layer.json');
+  assert.equal(status, 1, 'group-level markers are not inherited — mark every token');
+  assert.match(stderr, /color\.gray\.50: no \$extensions/);
+});

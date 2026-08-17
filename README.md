@@ -38,16 +38,48 @@ re-point. An overlay that overrides `color.blue.600` would silently change every
 that aliases it, in ways the base can't reason about — so the overlay's `resolve.mjs` **exits 1**
 when an override targets a token outside the semantic layer.
 
-Semantic tokens are marked in `tokens/tokens.json`; the marker is the machine-readable form of
-this contract and is what the resolve script checks against.
+### The marker
+
+Every token declares its layer under the `com.vaadin.aura` namespace in `$extensions` — the
+DTCG-sanctioned place for tool-specific metadata. This is the machine-readable form of the
+contract and what the overlay's resolve script checks against.
 
 ```jsonc
 "color": {
-  "blue":    { "600": { "$value": "#2563eb" } },          // primitive — locked
-  "primary": { "$value": "{color.blue.600}",              // semantic — overlays may re-point
-               "$description": "semantic" }
+  "blue": {
+    "600": { "$value": "#2563eb",                                    // primitive — locked
+             "$extensions": { "com.vaadin.aura": { "layer": "primitive" } } }
+  },
+  "primary": { "$value": "{color.blue.600}",                         // semantic — overlays may re-point
+               "$description": "Primary action colour",
+               "$extensions": { "com.vaadin.aura": { "layer": "semantic" } } }
 }
 ```
+
+`$extensions` rather than a `"$description": "semantic"` convention, so that descriptions stay
+human prose and the marker stays an exact-match enum with room for further per-token metadata.
+
+Three rules, all enforced by `npm run validate`:
+
+1. **Every token declares a layer.** A token without one is unclassifiable, so the overlay check
+   can't decide whether an override is legal. Missing is an error, never an implicit default.
+2. **The layer is `primitive` or `semantic`.** Nothing else.
+3. **No primitive may reference a semantic token.** That inverts the layering: overriding the
+   semantic token in an overlay would then silently move a primitive — the exact failure the
+   contract exists to prevent.
+
+> **Mark every token individually.** Style Dictionary inherits `$type` down a group but **not**
+> `$extensions`, so a marker on `color.gray` leaves `color.gray.50` unclassified. A test pins this
+> behaviour; if it ever changes, that test fails and this rule can be relaxed.
+
+### Reading the marker downstream
+
+`$extensions` survives resolution into the token objects, but **not into every output format**.
+Style Dictionary's `json/nested` and `json/flat` reduce each token to its bare value and drop the
+marker entirely; `json` preserves it (alongside internal noise like `filePath`). Anything that
+needs to reason about layers — the overlay's `resolve.mjs`, or `DesignSpecVerifier` reporting
+"this screen hardcodes a primitive" — must therefore either emit `tokens.resolved.json` with a
+format that keeps `$extensions`, or read the source tokens rather than the resolved artifact.
 
 ## Repo layout
 
@@ -112,7 +144,8 @@ npm test             # asserts the validator still rejects what it should
 
 `npm test` exists because the validator is the contract's only enforcement point in this repo, and
 a validator that silently passes everything looks exactly like a validator that works. It checks
-the negative cases: dangling references, a missing file, an empty token set.
+the negative cases: dangling references, a missing file, an empty token set, and each way the
+layering contract can be violated.
 
 Token changes are only correct if every reference still resolves *and* the semantic layer still
 covers what overlays are promised: surface / text / primary / brand colors, the spacing aliases,
