@@ -25,12 +25,13 @@ jobs:
       - name: Install
         run: npm ci
 
-      # Sanity check before publishing: tokens must be valid DTCG and every
-      # reference must resolve within the base system itself.
+      # Sanity checks before publishing: tokens must be valid DTCG with every
+      # reference resolving, every token classified into a layer, and the whole
+      # set still matching the pinned @vaadin/aura release.
       - name: Validate tokens
         run: npm run validate
 
-      - name: Test the validator
+      - name: Test the checks themselves
         run: npm test
 
       - name: Check version matches tag

@@ -1,0 +1,8 @@
+{
+  "$description": "Fixture: must FAIL. Two semantic tokens claiming one property means the later silently wins and one override does nothing.",
+  "color": {
+    "$type": "color",
+    "primary": { "$value": "#2563eb", "$extensions": { "com.vaadin.aura": { "layer": "semantic", "cssVar": "--aura-accent-color-light" } } },
+    "brand":   { "$value": "#7c3aed", "$extensions": { "com.vaadin.aura": { "layer": "semantic", "cssVar": "--aura-accent-color-light" } } }
+  }
+}

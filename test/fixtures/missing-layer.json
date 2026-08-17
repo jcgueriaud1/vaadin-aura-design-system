@@ -2,7 +2,19 @@
   "$description": "Fixture: must FAIL. color.blue.600 carries no layer marker, so it cannot be classified.",
   "color": {
     "$type": "color",
-    "blue": { "600": { "$value": "#2563eb" } },
-    "primary": { "$value": "{color.blue.600}", "$extensions": { "com.vaadin.aura": { "layer": "semantic" } } }
+    "blue": {
+      "600": {
+        "$value": "#2563eb"
+      }
+    },
+    "primary": {
+      "$value": "{color.blue.600}",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "layer": "semantic",
+          "cssVar": "--aura-accent-color-light"
+        }
+      }
+    }
   }
 }

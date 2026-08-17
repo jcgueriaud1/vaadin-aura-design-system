@@ -24,19 +24,53 @@ aura-design-system  (this repo, published to GitHub Packages)
         └──► DramaFinder DesignSpecVerifier
 ```
 
+## What Aura actually is
+
+Read this before touching `tokens/tokens.json` — it explains why the file looks the way it does.
+
+Aura is not a set of values. It is a **computation over about twenty inputs**. Of the 91 custom
+properties its root stylesheets define, only 32 are authorable; the other 59 are derived in the
+browser at runtime:
+
+```css
+--vaadin-text-color:  light-dark(var(--aura-neutral-light), var(--aura-neutral-dark));
+--vaadin-border-color: color-mix(in srgb, var(--_border-color-base)
+                                 calc(14% + 6% * var(--aura-contrast-level)), transparent);
+--vaadin-radius-m:     round(var(--aura-base-radius) * 2px + 3px, 1px);
+```
+
+`light-dark()`, `oklch(from …)` relative colour, `color-mix()` and `round()` have no DTCG
+equivalent — `$value` holds a value, not an expression. So the derived layer **cannot** be
+transcribed without freezing it, and freezing it would throw away exactly what makes Aura good:
+light/dark, contrast level, surface elevation and pointer density all adapt at runtime, for free.
+
+`tokens/tokens.json` therefore holds Aura's **inputs only**. Change `aura.base.size` and the
+entire spacing, radius and control-size scale moves with it, because the browser recomputes it.
+The derived surface is captured separately, as a generated snapshot, for tools that need concrete
+values (see [Reading the marker downstream](#reading-the-marker-downstream)).
+
+One consequence worth knowing up front: **text and border colours are not directly settable.**
+Aura derives them from `aura.background.*` and `aura.contrast-level`. An application tunes its
+text contrast through those two knobs, not by assigning a text colour.
+
 ## The layering contract
 
 Tokens live in two layers:
 
-| Layer | Example | Overlays may override? |
-|---|---|---|
-| **Primitive** | `color.blue.600`, `space.400` | ❌ never |
-| **Semantic** | `color.primary`, `space.card-padding` | ✅ yes |
+| Layer | What it is | Example | Emitted as CSS? | Overlays may override? |
+|---|---|---|---|---|
+| **Primitive** | the raw shared ramp | `aura.palette.blue` | ❌ never | ❌ never |
+| **Semantic** | an Aura input, named by role | `aura.accent.light` → `--aura-accent-color-light` | ✅ always | ✅ yes |
 
-Primitives are the raw scale. Semantic tokens are the *meanings* an application is allowed to
-re-point. An overlay that overrides `color.blue.600` would silently change every semantic token
-that aliases it, in ways the base can't reason about — so the overlay's `resolve.mjs` **exits 1**
-when an override targets a token outside the semantic layer.
+The two rules are one rule: **the emitted surface is exactly the override surface.** Every
+semantic token names the Aura custom property it maps to; primitives name none, because emitting
+one would hand overlays a property they can see but are forbidden to change.
+
+Primitives exist so that roles sharing a value stay independent. `aura.color.blue` (the info
+state) and `aura.accent.light` (the brand) both resolve to `{aura.palette.blue}` today. Re-pointing
+the brand must not silently recolour every info badge — routing both through a primitive is what
+keeps them separable. An overlay that overrode `aura.palette.blue` would move both at once, which
+is why `resolve.mjs` **exits 1** when an override targets anything outside the semantic layer.
 
 ### The marker
 
@@ -45,21 +79,26 @@ DTCG-sanctioned place for tool-specific metadata. This is the machine-readable f
 contract and what the overlay's resolve script checks against.
 
 ```jsonc
-"color": {
-  "blue": {
-    "600": { "$value": "#2563eb",                                    // primitive — locked
-             "$extensions": { "com.vaadin.aura": { "layer": "primitive" } } }
-  },
-  "primary": { "$value": "{color.blue.600}",                         // semantic — overlays may re-point
-               "$description": "Primary action colour",
-               "$extensions": { "com.vaadin.aura": { "layer": "semantic" } } }
+"palette": {
+  "blue": { "$value": "oklch(0.55 0.2 264)",                    // primitive — the raw hue
+            "$extensions": { "com.vaadin.aura": { "layer": "primitive" } } }
+},
+"accent": {
+  "light": { "$value": "{aura.palette.blue}",                   // semantic — overlays re-point this
+             "$extensions": { "com.vaadin.aura": {
+               "layer": "semantic",
+               "cssVar": "--aura-accent-color-light" } } }
 }
 ```
 
-`$extensions` rather than a `"$description": "semantic"` convention, so that descriptions stay
-human prose and the marker stays an exact-match enum with room for further per-token metadata.
+`$extensions` rather than a `"$description": "semantic"` convention, so descriptions stay human
+prose and the marker stays an exact-match enum with room for further per-token metadata.
 
-Three rules, all enforced by `npm run validate`:
+`cssVar` names the Aura property the token maps to. It lives here because the base owns that
+mapping: without it every overlay would need its own token-path → custom-property table, and
+Style Dictionary's derived names (`--aura-accent-light`) don't match Aura's real ones.
+
+Six rules, all enforced by `npm run validate`:
 
 1. **Every token declares a layer.** A token without one is unclassifiable, so the overlay check
    can't decide whether an override is legal. Missing is an error, never an implicit default.
@@ -67,10 +106,32 @@ Three rules, all enforced by `npm run validate`:
 3. **No primitive may reference a semantic token.** That inverts the layering: overriding the
    semantic token in an overlay would then silently move a primitive — the exact failure the
    contract exists to prevent.
+4. **Every semantic token has a `cssVar`.** One that is never emitted could be "overridden" with
+   no effect whatsoever.
+5. **No primitive has a `cssVar`.** Primitives are internal.
+6. **No two tokens claim the same `cssVar`.** Otherwise one silently wins and the other override
+   does nothing.
 
 > **Mark every token individually.** Style Dictionary inherits `$type` down a group but **not**
-> `$extensions`, so a marker on `color.gray` leaves `color.gray.50` unclassified. A test pins this
-> behaviour; if it ever changes, that test fails and this rule can be relaxed.
+> `$extensions`, so a marker on `aura.palette` leaves `aura.palette.blue` unclassified. A test pins
+> this behaviour; if it ever changes, that test fails and this rule can be relaxed.
+
+### Staying honest about Aura
+
+`tokens/tokens.json` is a transcription, and transcriptions rot. `@vaadin/aura` is pinned as an
+exact devDependency and `npm run check:aura` diffs the tokens against its source, reporting three
+things:
+
+| | |
+|---|---|
+| `DRIFTED` | Aura changed the value behind a token |
+| `VANISHED` | a token maps to a property Aura no longer defines |
+| `UNTRANSCRIBED` | Aura gained an input we don't model |
+
+`UNTRANSCRIBED` is the one that earns its keep — it turns "Aura added a knob" from something
+nobody notices into a failed build. Deliberate omissions are recorded in the `OMITTED` map in
+`scripts/check-aura-drift.mjs`, each with the reason it isn't a token; anything not on that list
+fails. Bumping Aura is then a real review: run the check, read what moved, decide.
 
 ### Reading the marker downstream
 
@@ -81,14 +142,26 @@ needs to reason about layers — the overlay's `resolve.mjs`, or `DesignSpecVeri
 "this screen hardcodes a primitive" — must therefore either emit `tokens.resolved.json` with a
 format that keeps `$extensions`, or read the source tokens rather than the resolved artifact.
 
+### The computed snapshot
+
+Inputs are enough to *build* a theme but not to *verify* one. `DesignSpecVerifier` samples a pixel
+and needs an expected colour to compare against, and `aura.contrast-level: 1` is not a colour —
+the real value only exists after the browser has evaluated `color-mix()` and `light-dark()`.
+
+So alongside the authored inputs there is a generated snapshot of the derived surface, produced by
+loading Aura in a headless browser and reading `getComputedStyle` per colour scheme. It is
+explicitly **not authoritative**: never hand-edited, regenerated from the inputs, and consumed only
+by tools that need concrete values — verification, and generators that want a real hex to show.
+Not yet built; tracked in [#7](../../issues/7).
+
 ## Repo layout
 
 ```
-tokens/tokens.json     DTCG source of truth: primitives + semantic layer
+tokens/tokens.json     DTCG source of truth: Aura's inputs, primitive + semantic
 components/            Canonical @vaadin/react-components examples, one per component
 DESIGN.md              Global rules, written as agent policy
-scripts/               Token validation
-test/                  Negative tests for the validator
+scripts/               Token validation and the Aura drift check
+test/                  Negative tests for both
 ```
 
 The base deliberately ships **no built CSS**. Overlays resolve base + overrides into their own
@@ -126,31 +199,41 @@ Add overrides as the brand diverges.
 ```jsonc
 // tokens/overrides.json — semantic layer only
 {
-  "color": {
-    "primary": { "$value": "{color.blue.500}" },
-    "brand":   { "$value": "#7c3aed" }
-  },
-  "radius": { "medium": { "$value": "0.75rem" } }
+  "aura": {
+    "accent": {
+      "light": { "$value": "oklch(0.58 0.22 290)" },   // brand colour, light scheme
+      "dark":  { "$value": "oklch(0.65 0.20 290)" }
+    },
+    "base": {
+      "radius": { "$value": 8 }                        // softer corners everywhere at once
+    },
+    "contrast-level": { "$value": 2 }                  // raise text/border contrast
+  }
 }
 ```
+
+Three values, and the whole theme moves: `base.radius` re-derives `--vaadin-radius-s/m/l`, and
+`contrast-level` re-derives text, secondary text, disabled text and both border colours. That
+leverage is the reason for keeping the inputs rather than a flattened value set.
 
 ## Development
 
 ```bash
 npm install
-npm run validate     # tokens.json parses as DTCG and every $value reference resolves
-npm test             # asserts the validator still rejects what it should
+npm run validate     # DTCG + references + layering contract, then the Aura drift check
+npm run check:aura   # just the drift check against the pinned @vaadin/aura
+npm test             # asserts both still reject what they should
 ```
 
-`npm test` exists because the validator is the contract's only enforcement point in this repo, and
-a validator that silently passes everything looks exactly like a validator that works. It checks
-the negative cases: dangling references, a missing file, an empty token set, and each way the
-layering contract can be violated.
+`npm test` exists because these two scripts are the contract's only enforcement in this repo, and
+a check that silently passes everything looks exactly like a check that works — which is precisely
+what the original token validation turned out to be. It covers dangling references, a missing
+file, an empty token set, every way the layering contract can be violated, and every way the
+tokens can drift from Aura.
 
-Token changes are only correct if every reference still resolves *and* the semantic layer still
-covers what overlays are promised: surface / text / primary / brand colors, the spacing aliases,
-radius, and the base font family. Removing or renaming a semantic token is a breaking change for
-every overlay.
+Token changes are only correct if every reference resolves, every token stays classified, and the
+tokens still match the pinned Aura release. Removing or renaming a semantic token is a breaking
+change for every overlay.
 
 ## Releasing
 

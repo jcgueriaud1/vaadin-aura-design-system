@@ -67,6 +67,7 @@ const LAYERS = ['primitive', 'semantic'];
 
 const layerOf = (token) => token.$extensions?.[NS]?.layer;
 const layers = new Map(tokens.map((t) => [t.path.join('.'), layerOf(t)]));
+const cssVars = new Map();
 const errors = [];
 
 for (const token of tokens) {
@@ -80,6 +81,27 @@ for (const token of tokens) {
   if (!LAYERS.includes(layer)) {
     errors.push(`${path}: layer "${layer}" is not one of ${LAYERS.join(' | ')}`);
     continue;
+  }
+
+  // Semantic tokens are exactly the tokens emitted as Aura custom properties,
+  // so each must name the property it maps to. Without it the overlay would
+  // need its own token-path -> CSS-variable table, duplicating knowledge the
+  // base owns; and Style Dictionary's derived names do not match Aura's.
+  const cssVar = token.$extensions?.[NS]?.cssVar;
+  if (layer === 'semantic') {
+    if (cssVar === undefined) {
+      errors.push(`${path}: semantic token has no cssVar — it would never be emitted`);
+    } else if (!cssVar.startsWith('--')) {
+      errors.push(`${path}: cssVar "${cssVar}" is not a custom property name`);
+    } else if (cssVars.has(cssVar)) {
+      errors.push(`${path}: cssVar "${cssVar}" already claimed by ${cssVars.get(cssVar)}`);
+    } else {
+      cssVars.set(cssVar, path);
+    }
+  } else if (cssVar !== undefined) {
+    // Primitives are the internal ramp. Emitting one would hand overlays a
+    // locked custom property they can see but are forbidden to change.
+    errors.push(`${path}: primitive declares cssVar "${cssVar}" — primitives are not emitted`);
   }
 
   // A primitive pointing at a semantic token inverts the layering: overriding
@@ -104,6 +126,6 @@ if (errors.length > 0) {
 
 const semantic = [...layers.values()].filter((l) => l === 'semantic').length;
 console.log(
-  `✓ ${source}: ${tokens.length} tokens (${semantic} semantic, ${tokens.length - semantic} primitive), ` +
-    `valid DTCG, all references resolve, layering contract holds`,
+  `✓ ${source}: ${tokens.length} tokens (${semantic} semantic → ${cssVars.size} CSS properties, ` +
+    `${tokens.length - semantic} primitive), valid DTCG, all references resolve, layering contract holds`,
 );

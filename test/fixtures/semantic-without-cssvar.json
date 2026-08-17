@@ -1,0 +1,7 @@
+{
+  "$description": "Fixture: must FAIL. A semantic token with no cssVar would never be emitted, so an overlay could 'override' it with no effect.",
+  "color": {
+    "$type": "color",
+    "primary": { "$value": "#2563eb", "$extensions": { "com.vaadin.aura": { "layer": "semantic" } } }
+  }
+}

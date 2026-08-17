@@ -1,0 +1,7 @@
+{
+  "$description": "Fixture: must FAIL. Emitting a primitive hands overlays a custom property they can see but are forbidden to change.",
+  "color": {
+    "$type": "color",
+    "blue": { "600": { "$value": "#2563eb", "$extensions": { "com.vaadin.aura": { "layer": "primitive", "cssVar": "--aura-blue" } } } }
+  }
+}

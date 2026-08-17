@@ -1,0 +1,337 @@
+{
+  "$description": "Fixture: must FAIL drift check. Token maps to a property Aura does not define.",
+  "aura": {
+    "palette": {
+      "$type": "color",
+      "$description": "Raw hue ramp. Primitive: shared by the state colours and the accent, so re-pointing one role must not move the others.",
+      "red": {
+        "$value": "oklch(0.59 0.2 25)",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "primitive"
+          }
+        }
+      },
+      "orange": {
+        "$value": "oklch(0.61 0.35 87)",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "primitive"
+          }
+        }
+      },
+      "yellow": {
+        "$value": "oklch(0.89 0.3 98)",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "primitive"
+          }
+        }
+      },
+      "green": {
+        "$value": "oklch(0.6 0.2 155)",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "primitive"
+          }
+        }
+      },
+      "blue": {
+        "$value": "oklch(0.55 0.2 264)",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "primitive"
+          }
+        }
+      },
+      "purple": {
+        "$value": "oklch(0.58 0.22 290)",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "primitive"
+          }
+        }
+      }
+    },
+    "stack": {
+      "$type": "fontFamily",
+      "$description": "Raw font stacks. Primitive. Aura composes 'Instrument Sans' onto the system stack via var(); DTCG cannot reference into an array, so the composed stack is written out in full.",
+      "system": {
+        "$value": [
+          "system-ui",
+          "ui-sans-serif",
+          "sans-serif"
+        ],
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "primitive"
+          }
+        }
+      },
+      "instrument-sans": {
+        "$value": [
+          "Instrument Sans",
+          "system-ui",
+          "ui-sans-serif",
+          "sans-serif"
+        ],
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "primitive"
+          }
+        }
+      }
+    },
+    "color": {
+      "$type": "color",
+      "$description": "Named colour slots. Aura's [theme~='danger'|'success'|'warning'|'info'] selectors re-point the accent at these, so these ARE the state colours \u2014 overriding aura.color.red is how an application changes its error colour.",
+      "red": {
+        "$value": "{aura.palette.red}",
+        "$description": "Danger / error state.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-red"
+          }
+        }
+      },
+      "orange": {
+        "$value": "{aura.palette.orange}",
+        "$description": "Auxiliary accent.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-orange"
+          }
+        }
+      },
+      "yellow": {
+        "$value": "{aura.palette.yellow}",
+        "$description": "Warning state.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-yellow"
+          }
+        }
+      },
+      "green": {
+        "$value": "{aura.palette.green}",
+        "$description": "Success state.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-green"
+          }
+        }
+      },
+      "blue": {
+        "$value": "{aura.palette.blue}",
+        "$description": "Info state.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-blue"
+          }
+        }
+      },
+      "purple": {
+        "$value": "{aura.palette.purple}",
+        "$description": "Auxiliary accent.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-purple"
+          }
+        }
+      }
+    },
+    "accent": {
+      "$type": "color",
+      "$description": "The primary/brand colour \u2014 the typical overlay override target. Aura keeps light and dark variants separate rather than deriving one from the other, so both are inputs.",
+      "light": {
+        "$value": "{aura.palette.blue}",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-accent-color-light"
+          }
+        }
+      },
+      "dark": {
+        "$value": "{aura.palette.blue}",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-accent-color-dark"
+          }
+        }
+      }
+    },
+    "background": {
+      "$type": "color",
+      "$description": "Page background per colour scheme. Everything else in Aura's colour system \u2014 text, borders, surfaces, containers \u2014 is derived FROM these two values plus contrast-level, so they are the highest-leverage tokens in the file.",
+      "light": {
+        "$value": "oklch(0.95 0.005 248)",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-background-color-light"
+          }
+        }
+      },
+      "dark": {
+        "$value": "oklch(0.2 0.01 260)",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-background-color-dark"
+          }
+        }
+      }
+    },
+    "contrast-level": {
+      "$type": "number",
+      "$value": 1,
+      "$description": "Accessibility knob. Raising it widens the derived gap between text, border and background. The a11y lever an overlay has \u2014 text colour itself is not directly settable.",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "layer": "semantic",
+          "cssVar": "--aura-removed-in-a-later-release"
+        }
+      }
+    },
+    "surface": {
+      "$type": "number",
+      "$description": "Surface elevation model. Level is a signed elevation; opacity controls translucency of surfaces over the app background.",
+      "level": {
+        "$value": 1,
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-surface-level"
+          }
+        }
+      },
+      "opacity": {
+        "$value": 0.5,
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-surface-opacity"
+          }
+        }
+      }
+    },
+    "base": {
+      "$type": "number",
+      "$description": "Unitless multipliers, NOT dimensions. Aura multiplies these by 1px inside round(), so the whole spacing, radius and control-size scale falls out of two numbers. Density variants ([theme~='small'] etc.) and pointer:coarse override size at runtime.",
+      "size": {
+        "$value": 16,
+        "$description": "Drives every gap, padding and control size.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-base-size"
+          }
+        }
+      },
+      "radius": {
+        "$value": 3,
+        "$description": "Drives radius-s/m/l.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-base-radius"
+          }
+        }
+      }
+    },
+    "font": {
+      "family": {
+        "$type": "fontFamily",
+        "$value": [
+          "Instrument Sans",
+          "system-ui",
+          "ui-sans-serif",
+          "sans-serif"
+        ],
+        "$description": "Base UI font stack.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-font-family"
+          }
+        }
+      },
+      "size": {
+        "$type": "number",
+        "$value": 14,
+        "$description": "Unitless base font size; Aura derives the xs\u2013xl ramp from it as base/16 rem.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-base-font-size"
+          }
+        }
+      },
+      "line-height": {
+        "$type": "number",
+        "$value": 1.4,
+        "$description": "Multiplier applied to every font size to derive the line-height ramp.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--aura-base-line-height"
+          }
+        }
+      },
+      "weight": {
+        "$type": "fontWeight",
+        "regular": {
+          "$value": 400,
+          "$extensions": {
+            "com.vaadin.aura": {
+              "layer": "semantic",
+              "cssVar": "--aura-font-weight-regular"
+            }
+          }
+        },
+        "medium": {
+          "$value": 500,
+          "$extensions": {
+            "com.vaadin.aura": {
+              "layer": "semantic",
+              "cssVar": "--aura-font-weight-medium"
+            }
+          }
+        },
+        "semibold": {
+          "$value": 600,
+          "$description": "Headings and strong text.",
+          "$extensions": {
+            "com.vaadin.aura": {
+              "layer": "semantic",
+              "cssVar": "--aura-font-weight-semibold"
+            }
+          }
+        }
+      }
+    }
+  },
+  "vaadin": {
+    "icon": {
+      "stroke-width": {
+        "$type": "number",
+        "$value": 1.75,
+        "$description": "Stroke weight of Aura's line icons.",
+        "$extensions": {
+          "com.vaadin.aura": {
+            "layer": "semantic",
+            "cssVar": "--vaadin-icon-stroke-width"
+          }
+        }
+      }
+    }
+  }
+}

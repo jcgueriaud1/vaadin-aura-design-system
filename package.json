@@ -3,16 +3,24 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Aura-based Vaadin design system: DTCG tokens, theme CSS, canonical @vaadin/react-components examples.",
-  "files": ["tokens", "components", "DESIGN.md"],
-  "publishConfig": { "registry": "https://npm.pkg.github.com" },
+  "files": [
+    "tokens",
+    "components",
+    "DESIGN.md"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
-    "validate": "node scripts/validate-tokens.mjs",
-    "test": "node --test \"test/**/*.test.mjs\""
+    "validate": "node scripts/validate-tokens.mjs && node scripts/check-aura-drift.mjs",
+    "test": "node --test \"test/**/*.test.mjs\"",
+    "check:aura": "node scripts/check-aura-drift.mjs"
   },
   "peerDependencies": {
     "@vaadin/react-components": ">=25.0.0"
   },
   "devDependencies": {
+    "@vaadin/aura": "25.2.8",
     "style-dictionary": "^5.5.1"
   }
 }

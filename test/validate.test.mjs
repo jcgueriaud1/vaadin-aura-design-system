@@ -71,3 +71,23 @@ test('group-level $extensions does not classify children', () => {
   assert.equal(status, 1, 'group-level markers are not inherited — mark every token');
   assert.match(stderr, /color\.gray\.50: no \$extensions/);
 });
+
+// --- The emitted surface is exactly the override surface -----------------
+
+test('rejects a semantic token with no cssVar', () => {
+  const { status, stderr } = validate('test/fixtures/semantic-without-cssvar.json');
+  assert.equal(status, 1, 'a semantic token that is never emitted cannot be overridden');
+  assert.match(stderr, /has no cssVar/);
+});
+
+test('rejects a primitive that declares a cssVar', () => {
+  const { status, stderr } = validate('test/fixtures/primitive-with-cssvar.json');
+  assert.equal(status, 1, 'emitting a primitive exposes a locked property');
+  assert.match(stderr, /primitives are not emitted/);
+});
+
+test('rejects two tokens claiming the same cssVar', () => {
+  const { status, stderr } = validate('test/fixtures/duplicate-cssvar.json');
+  assert.equal(status, 1, 'one property, one owner — otherwise an override silently does nothing');
+  assert.match(stderr, /already claimed by color\.primary/);
+});
