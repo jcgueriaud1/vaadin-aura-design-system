@@ -1,0 +1,14 @@
+{
+  "name": "@yourorg/aura-design-system",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Aura-based Vaadin design system: DTCG tokens, theme CSS, canonical @vaadin/react-components examples.",
+  "files": ["tokens", "theme", "components", "DESIGN.md"],
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
+  "peerDependencies": {
+    "@vaadin/react-components": ">=25.0.0"
+  },
+  "devDependencies": {
+    "style-dictionary": "^5.5.1"
+  }
+}
