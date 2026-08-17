@@ -1,0 +1,8 @@
+{
+  "$description": "Fixture: must FAIL validation. A semantic token pointing at a primitive that does not exist.",
+  "color": {
+    "$type": "color",
+    "blue": { "600": { "$value": "#2563eb" } },
+    "primary": { "$value": "{color.blue.does-not-exist}", "$description": "semantic" }
+  }
+}

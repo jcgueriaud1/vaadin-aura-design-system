@@ -53,10 +53,15 @@ this contract and is what the resolve script checks against.
 
 ```
 tokens/tokens.json     DTCG source of truth: primitives + semantic layer
-theme/                 Built CSS custom properties (generated)
 components/            Canonical @vaadin/react-components examples, one per component
 DESIGN.md              Global rules, written as agent policy
+scripts/               Token validation
+test/                  Negative tests for the validator
 ```
+
+The base deliberately ships **no built CSS**. Overlays resolve base + overrides into their own
+`tokens.resolved.json` and `theme/tokens.css`, so a base-built stylesheet would be an unbranded
+artifact with no consumer — and a generated file in git that drifts from its source.
 
 `components/` examples are not a component library — nothing here is imported at runtime. They are
 **few-shot prompts**: exemplary, commented, token-referencing usages of the real Vaadin API, kept
@@ -101,8 +106,13 @@ Add overrides as the brand diverges.
 
 ```bash
 npm install
-npm run validate     # style-dictionary parses tokens.json, all $value references resolve
+npm run validate     # tokens.json parses as DTCG and every $value reference resolves
+npm test             # asserts the validator still rejects what it should
 ```
+
+`npm test` exists because the validator is the contract's only enforcement point in this repo, and
+a validator that silently passes everything looks exactly like a validator that works. It checks
+the negative cases: dangling references, a missing file, an empty token set.
 
 Token changes are only correct if every reference still resolves *and* the semantic layer still
 covers what overlays are promised: surface / text / primary / brand colors, the spacing aliases,
