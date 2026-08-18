@@ -1,0 +1,61 @@
+name: Consumer install
+
+# The acceptance test for a release, run from outside the repo: install the
+# published package into an empty project with nothing but an .npmrc and a token,
+# then behave like a Phase 2 overlay and resolve the tokens out of node_modules.
+#
+# It lives in CI because of a credential fact, not a convenience one: GitHub
+# Packages' npm registry requires a token even for a PUBLIC package — an
+# unauthenticated GET answers 401 — and the token needs `read:packages`, which a
+# repo-scoped token does not carry. The built-in GITHUB_TOKEN gets exactly that
+# from `permissions: packages: read` below, so verifying a release costs nobody a
+# personal access token.
+on:
+  # Every release verifies itself, once the publish that produced it went green.
+  workflow_run:
+    workflows: ["Publish design system"]
+    types: [completed]
+  # PRs that touch the check or what gets packed.
+  pull_request:
+    paths:
+      - 'test/check-consumer.mjs'
+      - '.github/workflows/consumer.yml'
+      - 'package.json'
+  workflow_dispatch:
+    inputs:
+      spec:
+        description: 'Package spec to install (default: the version in package.json)'
+        required: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  consumer:
+    # A failed publish has nothing to verify.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      # Tags included: the check compares the installed tree against a pack of
+      # the tag the installed version came from, not of HEAD, so that commits
+      # made after a release are not mistaken for the registry serving drift.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No `npm ci`: the point is to install the package the way a stranger
+      # would, and the check builds its own throwaway project to do it in. The
+      # only thing it takes from this checkout is what `npm pack` says the
+      # current commit ships, which is what the installed tree is compared to.
+      #
+      # On a PR that bumps the version before the release exists, this step fails
+      # by design — dispatch it with an explicit `spec` instead.
+      - name: Install as a consumer and resolve the tokens
+        run: node test/check-consumer.mjs --registry ${{ inputs.spec }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
