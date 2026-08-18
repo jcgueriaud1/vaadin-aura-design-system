@@ -28,9 +28,9 @@ aura-design-system  (this repo, published to GitHub Packages)
 
 Read this before touching `tokens/tokens.json` — it explains why the file looks the way it does.
 
-Aura is not a set of values. It is a **computation over about twenty inputs**. Of the 91 custom
-properties its root stylesheets define, only 32 are authorable; the other 59 are derived in the
-browser at runtime:
+Aura is not a set of values. It is a **computation over twenty-two inputs**. Of the 91 public
+custom properties its root stylesheets define, 22 are authorable; 66 are derived in the browser at
+runtime, and the remaining three are CSS-wide keywords and a raw font stack with no DTCG form:
 
 ```css
 --vaadin-text-color:  light-dark(var(--aura-neutral-light), var(--aura-neutral-dark));
@@ -47,7 +47,7 @@ light/dark, contrast level, surface elevation and pointer density all adapt at r
 `tokens/tokens.json` therefore holds Aura's **inputs only**. Change `aura.base.size` and the
 entire spacing, radius and control-size scale moves with it, because the browser recomputes it.
 The derived surface is captured separately, as a generated snapshot, for tools that need concrete
-values (see [Reading the marker downstream](#reading-the-marker-downstream)).
+values (see [The computed snapshot](#the-computed-snapshot)).
 
 One consequence worth knowing up front: **text and border colours are not directly settable.**
 Aura derives them from `aura.background.*` and `aura.contrast-level`. An application tunes its
@@ -148,21 +148,124 @@ Inputs are enough to *build* a theme but not to *verify* one. `DesignSpecVerifie
 and needs an expected colour to compare against, and `aura.contrast-level: 1` is not a colour —
 the real value only exists after the browser has evaluated `color-mix()` and `light-dark()`.
 
-So alongside the authored inputs there is a generated snapshot of the derived surface, produced by
-loading Aura in a headless browser and reading `getComputedStyle` per colour scheme. It is
-explicitly **not authoritative**: never hand-edited, regenerated from the inputs, and consumed only
-by tools that need concrete values — verification, and generators that want a real hex to show.
-Not yet built; tracked in [#7](../../issues/7).
+So alongside the authored inputs there is a generated snapshot of the derived surface, one file per
+colour scheme:
+
+```
+tokens/computed/aura-light.computed.json
+tokens/computed/aura-dark.computed.json
+```
+
+```bash
+npm run snapshot         # regenerate both (needs Chromium)
+npm run check:snapshot   # is the committed snapshot still the truth? (no browser)
+```
+
+`build-computed-snapshot.mjs` loads Aura in headless Chromium, applies the tokens, and reads every
+derived property back off a probe element. Reading the custom property directly is not enough —
+`getPropertyValue('--vaadin-text-color')` hands back the unevaluated
+`light-dark(oklch(from …), …)` token stream — so each value is assigned to a **registered** custom
+property (`CSS.registerProperty` with `<color>` / `<length>`) whose computed value the browser is
+obliged to resolve. Values that are neither are read through `box-shadow`, `background` or
+`font-family`. Sixty-five of the sixty-six derived properties resolve; the one that doesn't is
+recorded, with the reason, in the header's `unresolved` list rather than silently dropped.
+
+```jsonc
+"--vaadin-text-color": {
+  "$type": "color",
+  "$value": "oklch(0.15 0.0038 248)",          // the space the browser computed in
+  "$extensions": { "com.vaadin.aura": {
+    "derived": true,
+    "from": ["aura.background.dark", "aura.background.light", "aura.contrast-level"],
+    "srgb": "#0a0b0d",                          // what a sampled pixel will hold
+    "rgba": [10, 11, 13, 1],
+    "alpha": 1 } } }
+```
+
+`$type` is DTCG's where DTCG has one: colours carry the resolved value plus its sRGB form,
+dimensions are px strings, font stacks are arrays. Shadows and backgrounds carry the resolved CSS
+string — DTCG's structured `shadow` and `gradient` types cannot express what Aura computes — which
+is one more reason this file is a snapshot and not a token source.
+
+Four decisions are worth knowing, because each one is a fork the file could have taken:
+
+**Compare in sRGB, with a tolerance of 2.** `$value` keeps whatever space the browser computed in —
+`oklch()`, `oklab()`, `color(srgb …)` — and none of those match a screenshot byte-for-byte. So every
+colour also carries `srgb`/`rgba`, 8-bit, which is the space a sampled pixel is in, and the header
+names the tolerance a verifier should allow. Where `alpha < 1` the value must be composited over
+the surface behind it before comparing; the header says so too. The generator proves all of this
+rather than asserting it: on every run it paints each colour and each length it emits, screenshots
+the page, samples the pixels back and fails if any differs by more than the tolerance. The worst
+delta across 118 values today is 1.
+
+**Two colour schemes, one density.** `light-dark()` picks a different branch per scheme and neither
+is more correct, so both are generated — 27 of the 65 values differ between them. Density is not
+multiplied into the files: `pointer: coarse` and `[theme~='small'|'large'|…]` move
+`--aura-base-size` and nothing else, and multiplying two schemes by six densities to re-scale one
+number is not a trade worth making. The generator takes `--theme small` and `--pointer coarse` for
+anyone who needs one, and names the file after the variant, but the committed pair is the default
+density.
+
+**Generated, and enforced as generated.** The snapshot is regenerated from `tokens/tokens.json`; if
+the two ever disagree, the snapshot is wrong by definition. That is a contract, so it is checked
+rather than documented. Each file's header records the Aura release, the Chromium build, and a hash
+of the inputs it was generated from, plus a hash of its own body — and `npm run check:snapshot`,
+part of `npm run validate`, rejects it four ways:
+
+| | |
+|---|---|
+| `STALE` | generated from another `@vaadin/aura`, another Chromium, or different inputs |
+| `EDITED` | the body no longer hashes to what the generator recorded |
+| `COVERAGE` | Aura derives a property the snapshot does not account for — or the snapshot restates an input |
+| `MISSING` | a colour scheme has no snapshot at all |
+
+Reformatting the file is fine (the hash is over key-sorted content, not bytes); changing a value is
+not. `EDITED` is the rule "never hand-edit this" with teeth, and `COVERAGE` is what makes an Aura
+bump that adds a derived property a failed build instead of a quiet omission. Playwright is pinned
+exactly, like Aura, because the renderer is part of the provenance: a new Chromium can serialise or
+resolve a computed colour differently.
+
+**The base ships the generator; overlays run it.** This snapshot is *unbranded* Aura — its header
+proves it, listing the inputs it had to override as `[]`, because `npm run check:aura` guarantees
+the tokens match Aura. Once an overlay re-points `aura.accent.light`, every derived colour changes,
+so the snapshot that matters for verifying a real application is the overlay's:
+
+```bash
+npm i -D playwright && npx playwright install chromium   # the overlay brings the browser
+node node_modules/@jcgueriaud1/vaadin-aura-design-system/scripts/build-computed-snapshot.mjs \
+  --tokens tokens.resolved.json --out design-system/computed
+```
+
+The generator and its checker ship in the package (`scripts/`) for exactly this. An overlay needs
+`@vaadin/aura` and `playwright` of its own — the base pins both as devDependencies, and a
+devDependency of a dependency is not installed. `tokens.resolved.json` must be emitted in a format
+that keeps `$extensions`: the generator reads each token's `cssVar` to know which Aura property it
+sets, and `json/flat` throws that away.
+
+Only the inputs that actually differ from Aura's defaults are emitted as CSS. That is not an
+optimisation: Aura declares its own inputs at zero specificity (`:where(:root)`), so an override at
+`:root` also beats Aura's `@media (pointer: coarse)` and `[theme~='small']` re-declarations of the
+same property. Emitting all 22 inputs would pin `--aura-base-size` and silently switch off every
+density adaptation — the snapshot would describe a theme nobody runs. **Overlay authors: the same
+trap applies to your `theme/tokens.css`.**
+
+The browser is the one cost here. It stays out of `publish.yml`, which gets the hash check for free
+inside `npm run validate`; regenerating and re-verifying against real pixels runs in its own
+[`snapshot.yml`](.github/workflows/snapshot.yml), only when the tokens, the generator or the pinned
+dependencies change.
 
 ## Repo layout
 
 ```
 tokens/tokens.json     DTCG source of truth: Aura's inputs, primitive + semantic
+tokens/computed/       GENERATED: the derived surface, one file per colour scheme
 DESIGN.md              Global rules, written as agent policy
-components/            Canonical @vaadin/react-components examples, one per component
-sandbox/               Throwaway Vite app that mounts every example, to prove they render
-scripts/               Token validation, Aura drift check, DESIGN.md and example checks
-test/                  Negative tests for all four
+components/            Canonical @vaadin/react-components examples, six of them
+.design-sync/          Durable input for the Claude Design project: config, stories, prompts
+sandbox/               Throwaway Vite app that mounts every example and every story
+scripts/               Token validation, drift, DESIGN.md, example, coverage and snapshot checks
+scripts/lib/           Shared reading of the Aura surface: what is an input, what is derived
+test/                  Negative tests for all six
 ```
 
 The base deliberately ships **no built CSS**. Overlays resolve base + overrides into their own
@@ -197,6 +300,55 @@ It earns its keep. The `FormLayout` example first shipped `fields.every((f) => f
 which compiles, passes every static check, and flags exactly one field at a time because `every`
 short-circuits. Only rendering it and clicking Submit showed the second field sitting there
 unmarked.
+
+### The design-sync project
+
+The examples answer "what is the correct API for this pattern". They do not answer "what does this
+component look like in this theme", and they never will — there are six of them and Vaadin ships
+79 components. That second question is answered by the
+[Claude Design](https://claude.ai/design) project the repo publishes to, where every component in
+`@vaadin/react-components` has a card rendered by the real component under the real Aura theme.
+
+`.design-sync/` is the durable input; `ds-bundle/` is derived and gitignored.
+
+```
+.design-sync/config.json        the kit, the cards, their groups and viewports
+.design-sync/previews/<Name>.tsx  stories driving a curated components/<Name>.tsx example
+.design-sync/showcase/<Name>.tsx  stories written straight against the Vaadin API
+.design-sync/prompts/<Name>.md    per-component API contract and traps, where one is worth writing
+```
+
+Two kinds of card, one pipeline. A config entry with a `source` is one of the six **examples** and
+ships that file and its prompt in the card folder. An entry without one is a **showcase**: stories
+and nothing else. That split is what lets the project cover every component without pretending each
+one has a curated example behind it — and keeps the six that do from being diluted by 47 that don't.
+
+```bash
+npm run design:build     # → ds-bundle/, with its own self-check
+```
+
+**Coverage is checked, not claimed.** `npm run check:showcase` walks the installed package rather
+than the config, so the three ways this can rot each fail the build:
+
+| | |
+|---|---|
+| `UNCOVERED` | in the kit, but with no card, no other card's `covers`, and no omission reason |
+| `UNTRANSCRIBED` | the package exports a component and `config.kit` doesn't list it |
+| `VANISHED` | `config.kit` lists one the package no longer exports |
+
+`covers` is how a sub-component stays accounted for without a card that would show it out of
+context — `GridTreeColumn` is demonstrated by the `GridTree` card, `FormItem` by `FormLayout`.
+Deliberate omissions live in `config.omitted` with a reason each, the same contract
+`check-aura-drift.mjs` uses. Today there is exactly one: `Iconset`, which renders nothing itself.
+
+The same check applies DESIGN.md §2 and §4 to the story files — they are shipped into the card
+folder and read as authority too — and verifies each card's `__order` still matches its exports,
+since a story missing from `__order` silently sorts to the end of the card.
+
+What the compiler cannot see, the browser can. The stories in this repo have been rendered and read,
+which is how the trap list in `.design-sync/ds-readme.md` was found: `MasterDetailLayout`'s React
+wrapper throws on `slot="detail"` children, and its detail area needs an explicit `detailSize` or it
+freezes at its content width. Both type-check perfectly.
 
 ## Consuming the base
 
@@ -248,16 +400,28 @@ npm run validate         # all the checks below, in order
 npm run check:aura       # tokens still match the pinned @vaadin/aura
 npm run check:design     # every name DESIGN.md recommends still exists
 npm run check:components # examples compile against the pinned Vaadin, and obey DESIGN.md
+npm run check:showcase   # the design-sync project still covers every Vaadin component
+npm run check:snapshot   # the computed snapshot is current, generated and unedited
 npm test                 # asserts they all still reject what they should
+```
+
+Two commands need a browser and so are not part of `validate`:
+
+```bash
+npx playwright install chromium              # once
+npm run snapshot         # regenerate tokens/computed/ (self-verifying against real pixels)
+npm run snapshot:check   # regenerate in memory and fail if it differs from what is committed
+cd sandbox && npm install && npm run dev     # render every example and story
 ```
 
 `npm test` exists because these scripts are the contract's only enforcement in this repo, and a
 check that silently passes everything looks exactly like a check that works — which is precisely
 what the original token validation turned out to be. It covers dangling references, a missing
 file, an empty token set, every way the layering contract can be violated, every way the tokens
-can drift from Aura, stale names in `DESIGN.md`, and every rule the examples can break —
-including the two failures that look like success: an examples directory with nothing in it, and
-a range-pinned Vaadin that would make every "verified against" line unfalsifiable.
+can drift from Aura, stale names in `DESIGN.md`, every rule the examples can break, and every way
+the computed snapshot can stop being true — including the two failures that look like success: an
+examples directory with nothing in it, and a range-pinned Vaadin that would make every "verified
+against" line unfalsifiable.
 
 That last one matters more than it sounds. `DESIGN.md` is read as authority by agents, and a
 property Aura has since renamed doesn't error — it resolves to nothing and the element renders

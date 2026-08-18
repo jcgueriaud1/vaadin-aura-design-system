@@ -16,7 +16,17 @@
  *   components/<Group>/<Name>/<Name>.html    the card (first line carries @dsCard)
  *   _ds_manifest.json                        card index, token list, themes
  *
- * Durable inputs live in .design-sync/ — config, preview stories, prompt files.
+ * Durable inputs live in .design-sync/ — config, stories, prompt files. There
+ * are two kinds of card and one pipeline for both:
+ *
+ *   previews/<Name>.tsx   stories driving a curated components/<Name>.tsx example
+ *   showcase/<Name>.tsx   stories written straight against the Vaadin API
+ *
+ * A config entry with `source` is the first kind and ships the example and its
+ * prompt in the card folder; one without is the second, which is what lets the
+ * pane index every component the design system supports without pretending each
+ * one has a curated example behind it.
+ *
  * Everything in ds-bundle/ is derived; never hand-edit it.
  *
  *   node scripts/build-design-bundle.mjs [outDir]
@@ -49,7 +59,7 @@ if (!existsSync(path.join(sandbox, 'node_modules', 'vite'))) {
 }
 
 const config = JSON.parse(await readFile(path.join(inputs, 'config.json'), 'utf8'));
-const { namespace, components, guidelines = [] } = config;
+const { namespace, components, guidelines = [], kit = [] } = config;
 const version = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8')).devDependencies[
   '@vaadin/react-components'
 ];
@@ -65,6 +75,22 @@ const upToRoot = '../../../';
  * code and no `window.AuraReact`, with no error to show for it.
  */
 const bundleFile = '_aura/aura-ds.js';
+
+/**
+ * Where a card's stories come from, and what else ships beside them.
+ *
+ * `source` present  — a curated example in components/. Its stories drive that
+ *                     example, and the card carries the example and its prompt,
+ *                     because the card is the visual claim that *this source*
+ *                     renders *this way*.
+ * `source` absent   — a showcase. Stories are written straight against the
+ *                     Vaadin API, and there is no example to ship. A prompt is
+ *                     optional: written where the API has a trap worth naming.
+ */
+const storiesDir = (component) => (component.source ? 'previews' : 'showcase');
+const storiesFile = (component) => path.join(inputs, storiesDir(component), `${component.name}.tsx`);
+const promptFile = (component) => path.join(inputs, 'prompts', `${component.name}.md`);
+const hasPrompt = (component) => existsSync(promptFile(component));
 
 const vaadinDir = path.join(sandbox, 'node_modules', '@vaadin');
 const reactDir = path.join(sandbox, 'node_modules', 'react');
@@ -145,12 +171,13 @@ async function main() {
       `window.__dsPreview = (window.${namespace} && window.${namespace}.__stories && window.${namespace}.__stories.${component.name}) || {};\n`,
     );
     await writeFile(path.join(dir, `${component.name}.html`), card(component, namespace));
-    await cp(path.join(root, component.source), path.join(dir, `${component.name}.tsx`));
-    await cp(
-      path.join(inputs, 'previews', `${component.name}.tsx`),
-      path.join(dir, `${component.name}.stories.tsx`),
-    );
-    await cp(path.join(inputs, 'prompts', `${component.name}.md`), path.join(dir, `${component.name}.prompt.md`));
+    await cp(storiesFile(component), path.join(dir, `${component.name}.stories.tsx`));
+    if (component.source) {
+      await cp(path.join(root, component.source), path.join(dir, `${component.name}.tsx`));
+    }
+    if (hasPrompt(component)) {
+      await cp(promptFile(component), path.join(dir, `${component.name}.prompt.md`));
+    }
   }
 
   // 4. Docs, tokens, guidelines.
@@ -210,47 +237,17 @@ async function buildLib(build, react, { entry, fileName, name, external = {}, cs
 }
 
 /**
- * The kit is an explicit list, not `export * from '@vaadin/react-components'`:
- * the barrel pulls in every component in the package (charts, crud, dashboard)
- * and the bundle stops being something a canvas page can load.
+ * The kit is an explicit list — `config.kit` — and not
+ * `export * from '@vaadin/react-components'`. A barrel is unreviewable: nothing
+ * in the diff says what the design system claims to support, and a Vaadin
+ * release silently changes the answer. scripts/check-showcase.mjs holds the list
+ * to the installed package in the other direction, so a component that appears
+ * or disappears is a failed build rather than a card nobody notices is missing.
+ *
+ * Export name and module name are the same for every component in the package,
+ * which is what lets one name stand for both.
  */
-const KIT = [
-  ['Button', 'Button'],
-  ['Icon', 'Icon'],
-  ['Tooltip', 'Tooltip'],
-  ['HorizontalLayout', 'HorizontalLayout'],
-  ['VerticalLayout', 'VerticalLayout'],
-  ['Card', 'Card'],
-  ['Badge', 'Badge'],
-  ['FormLayout', 'FormLayout'],
-  ['TextField', 'TextField'],
-  ['TextArea', 'TextArea'],
-  ['EmailField', 'EmailField'],
-  ['NumberField', 'NumberField'],
-  ['PasswordField', 'PasswordField'],
-  ['Checkbox', 'Checkbox'],
-  ['CheckboxGroup', 'CheckboxGroup'],
-  ['RadioGroup', 'RadioGroup'],
-  ['RadioButton', 'RadioButton'],
-  ['Select', 'Select'],
-  ['ComboBox', 'ComboBox'],
-  ['DatePicker', 'DatePicker'],
-  ['Item', 'Item'],
-  ['ListBox', 'ListBox'],
-  ['Grid', 'Grid'],
-  ['GridColumn', 'GridColumn'],
-  ['GridSortColumn', 'GridSortColumn'],
-  ['GridSelectionColumn', 'GridSelectionColumn'],
-  ['Dialog', 'Dialog'],
-  ['ConfirmDialog', 'ConfirmDialog'],
-  ['Notification', 'Notification'],
-  ['ProgressBar', 'ProgressBar'],
-  ['Avatar', 'Avatar'],
-  ['Tabs', 'Tabs'],
-  ['Tab', 'Tab'],
-  ['Scroller', 'Scroller'],
-  ['Details', 'Details'],
-];
+const KIT = kit;
 
 function bundleEntry(components) {
   const imports = [
@@ -258,16 +255,18 @@ function bundleEntry(components) {
     "import '@vaadin/aura';",
     "import '@vaadin/icons';",
     '',
-    ...KIT.map(([name, module]) => `import { ${name} } from '@vaadin/react-components/${module}.js';`),
+    ...KIT.map((name) => `import { ${name} } from '@vaadin/react-components/${name}.js';`),
     '',
-    ...components.map((c) => `import * as ${c.name}Stories from '../../.design-sync/previews/${c.name}';`),
+    ...components.map(
+      (c) => `import * as ${c.name}Stories from '../../.design-sync/${storiesDir(c)}/${c.name}';`,
+    ),
   ];
 
   return [
     ...imports,
     '',
     `window.${config.namespace} = {`,
-    ...KIT.map(([name]) => `  ${name},`),
+    ...KIT.map((name) => `  ${name},`),
     '  __stories: {',
     ...components.map((c) => `    ${c.name}: ${c.name}Stories,`),
     '  },',
@@ -521,9 +520,11 @@ async function manifest(components, guidelines, ns, ver) {
   return {
     namespace: ns,
     version: ver,
+    // The source the pane shows for a component: its curated example where there
+    // is one, otherwise the stories, which are the only source that card has.
     components: components.map((c) => ({
       name: c.name,
-      sourcePath: `components/${c.group}/${c.name}/${c.name}.tsx`,
+      sourcePath: `components/${c.group}/${c.name}/${c.name}.${c.source ? 'tsx' : 'stories.tsx'}`,
     })),
     startingPoints: [],
     cards: [
@@ -581,7 +582,10 @@ async function selfCheck(components, ns) {
 
   for (const component of components) {
     const dir = path.join(outDir, 'components', component.group, component.name);
-    for (const file of [`${component.name}.html`, `${component.name}.tsx`, `${component.name}.stories.tsx`, `${component.name}.prompt.md`]) {
+    const expected = [`${component.name}.html`, `${component.name}.stories.tsx`];
+    if (component.source) expected.push(`${component.name}.tsx`);
+    if (hasPrompt(component)) expected.push(`${component.name}.prompt.md`);
+    for (const file of expected) {
       if (size(path.join(dir, file)) === 0) problems.push(`missing or empty: ${path.relative(outDir, path.join(dir, file))}`);
     }
     const cardSource = await readFile(path.join(dir, `${component.name}.html`), 'utf8');
@@ -590,7 +594,7 @@ async function selfCheck(components, ns) {
     }
     // The stories module is name-mangled in the bundle, so check the story
     // names survived rather than the identifier.
-    const stories = (await readFile(path.join(inputs, 'previews', `${component.name}.tsx`), 'utf8'))
+    const stories = (await readFile(storiesFile(component), 'utf8'))
       .match(/export const (\w+)/g)
       ?.map((m) => m.replace('export const ', '')) ?? [];
     if (stories.length === 0) problems.push(`${component.name} has no exported stories`);

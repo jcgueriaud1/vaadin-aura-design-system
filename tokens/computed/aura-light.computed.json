@@ -1,0 +1,1161 @@
+{
+  "$description": "GENERATED FILE — DO NOT EDIT. Computed values of the 65 root custom properties @vaadin/aura@25.2.8 derives at runtime, in the light colour scheme, read from a browser after light-dark(), oklch(from …), color-mix() and round() were evaluated. Generated from tokens/tokens.json; if the two disagree, this file is wrong by definition. Regenerate with `npm run snapshot` — `npm run check:snapshot` rejects a stale or hand-edited copy. Not a token source: it is never fed to Style Dictionary and overlays never override it.",
+  "$extensions": {
+    "com.vaadin.aura": {
+      "generated": {
+        "format": 1,
+        "by": "scripts/build-computed-snapshot.mjs",
+        "engine": "Chromium 151.0.7922.34",
+        "auraVersion": "25.2.8",
+        "inputs": "tokens/tokens.json",
+        "inputsHash": "sha256:3074b7806a5df5d21e30925bda5c8c9e79ae0a4aecd92a188e22f276a1ef75b7",
+        "overriding": [],
+        "conditions": {
+          "colorScheme": "light",
+          "colorSchemeMechanism": "`color-scheme: light dark` on :root plus the matching prefers-color-scheme",
+          "density": "default",
+          "pointer": "fine",
+          "probe": "a <div> inside <body>, so lh-relative values resolve against Aura's content line-height"
+        },
+        "comparison": {
+          "space": "srgb",
+          "encoding": "8-bit per channel",
+          "tolerance": 2,
+          "note": "Compare against `srgb`/`rgba`, not `$value`: a sampled pixel is sRGB while $value keeps the colour space the browser computed in (oklch, oklab, color(srgb …)). Where alpha < 1, composite over the surface behind the element before comparing."
+        },
+        "unresolved": [
+          {
+            "cssVar": "--vaadin-input-field-value-font-size",
+            "reason": "not defined under these conditions — Aura declares it only inside an at-rule this snapshot does not match",
+            "declared": [
+              "max(16px, var(--aura-font-size-m))"
+            ]
+          }
+        ],
+        "bodyHash": "sha256:3de395ce4ab8941857f469774ba3b277a5e36f1ed3b0d8455fa1f037814d6928"
+      }
+    }
+  },
+  "computed": {
+    "--aura-accent-border-color": {
+      "$type": "color",
+      "$value": "color(srgb 0.177611 0.278147 0.501034 / 0.1935)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.dark",
+            "aura.accent.light",
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.contrast-level",
+            "aura.surface.level"
+          ],
+          "srgb": "#2f4982",
+          "rgba": [
+            47,
+            73,
+            130,
+            0.192
+          ],
+          "alpha": 0.192
+        }
+      }
+    },
+    "--aura-accent-color": {
+      "$type": "color",
+      "$value": "oklch(0.55 0.2 264)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.dark",
+            "aura.accent.light"
+          ],
+          "srgb": "#3266e4",
+          "rgba": [
+            50,
+            102,
+            228,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-accent-color-dark-initial": {
+      "$type": "color",
+      "$value": "oklch(0.55 0.2 264)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.dark"
+          ],
+          "srgb": "#3266e4",
+          "rgba": [
+            50,
+            102,
+            228,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-accent-color-light-initial": {
+      "$type": "color",
+      "$value": "oklch(0.55 0.2 264)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.light"
+          ],
+          "srgb": "#3266e4",
+          "rgba": [
+            50,
+            102,
+            228,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-accent-contrast-color": {
+      "$type": "color",
+      "$value": "oklch(1 0 0)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.dark",
+            "aura.accent.light"
+          ],
+          "srgb": "#ffffff",
+          "rgba": [
+            255,
+            255,
+            255,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-accent-contrast-color-dark": {
+      "$type": "color",
+      "$value": "oklch(1 0 0)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.dark"
+          ],
+          "srgb": "#ffffff",
+          "rgba": [
+            255,
+            255,
+            255,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-accent-contrast-color-light": {
+      "$type": "color",
+      "$value": "oklch(1 0 0)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.light"
+          ],
+          "srgb": "#ffffff",
+          "rgba": [
+            255,
+            255,
+            255,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-accent-surface": {
+      "$type": "color",
+      "$value": "oklch(0.945253 0.0161776 263.199 / 0.5)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.dark",
+            "aura.accent.light",
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.surface.level",
+            "aura.surface.opacity"
+          ],
+          "srgb": "#e7edf7",
+          "rgba": [
+            231,
+            237,
+            247,
+            0.502
+          ],
+          "alpha": 0.502
+        }
+      }
+    },
+    "--aura-accent-text-color": {
+      "$type": "color",
+      "$value": "oklch(0.5 0.18 264)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.dark",
+            "aura.accent.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#2b59c8",
+          "rgba": [
+            43,
+            89,
+            200,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-accent-text-color-dark": {
+      "$type": "color",
+      "$value": "oklch(0.8 0.18 264)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.dark",
+            "aura.contrast-level"
+          ],
+          "srgb": "#81b9ff",
+          "rgba": [
+            129,
+            185,
+            255,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-accent-text-color-light": {
+      "$type": "color",
+      "$value": "oklch(0.5 0.18 264)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#2b59c8",
+          "rgba": [
+            43,
+            89,
+            200,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-app-background": {
+      "$type": "background",
+      "$value": "radial-gradient(circle at 0% 0%, oklch(0.965 0.005 248), rgba(0, 0, 0, 0) 30%), radial-gradient(circle at 25% 0% in xyz-d65, oklch(0.95 0.005 248) 33%, oklch(0.955 0 251.42))",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light"
+          ],
+          "backgroundColor": "oklch(0.95 0.005 248)"
+        }
+      }
+    },
+    "--aura-background-color": {
+      "$type": "color",
+      "$value": "oklch(0.95 0.005 248)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light"
+          ],
+          "srgb": "#eceff2",
+          "rgba": [
+            236,
+            239,
+            242,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-blue-text": {
+      "$type": "color",
+      "$value": "oklch(0.45 0.18 264)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.color.blue",
+            "aura.contrast-level"
+          ],
+          "srgb": "#1e49b7",
+          "rgba": [
+            30,
+            73,
+            183,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-font-family-instrument-sans": {
+      "$type": "fontFamily",
+      "$value": [
+        "Instrument Sans",
+        "system-ui",
+        "ui-sans-serif",
+        "sans-serif"
+      ],
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": []
+        }
+      }
+    },
+    "--aura-font-size-l": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.size"
+          ]
+        }
+      }
+    },
+    "--aura-font-size-m": {
+      "$type": "dimension",
+      "$value": "14px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.size"
+          ]
+        }
+      }
+    },
+    "--aura-font-size-s": {
+      "$type": "dimension",
+      "$value": "13px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.size"
+          ]
+        }
+      }
+    },
+    "--aura-font-size-xl": {
+      "$type": "dimension",
+      "$value": "18px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.size"
+          ]
+        }
+      }
+    },
+    "--aura-font-size-xs": {
+      "$type": "dimension",
+      "$value": "12px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.size"
+          ]
+        }
+      }
+    },
+    "--aura-green-text": {
+      "$type": "color",
+      "$value": "oklch(0.45 0.18 155)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.color.green",
+            "aura.contrast-level"
+          ],
+          "srgb": "#006f20",
+          "rgba": [
+            0,
+            111,
+            32,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-line-height-l": {
+      "$type": "dimension",
+      "$value": "22px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.line-height",
+            "aura.font.size"
+          ]
+        }
+      }
+    },
+    "--aura-line-height-m": {
+      "$type": "dimension",
+      "$value": "20px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.line-height",
+            "aura.font.size"
+          ]
+        }
+      }
+    },
+    "--aura-line-height-s": {
+      "$type": "dimension",
+      "$value": "18px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.line-height",
+            "aura.font.size"
+          ]
+        }
+      }
+    },
+    "--aura-line-height-xl": {
+      "$type": "dimension",
+      "$value": "26px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.line-height",
+            "aura.font.size"
+          ]
+        }
+      }
+    },
+    "--aura-line-height-xs": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.line-height",
+            "aura.font.size"
+          ]
+        }
+      }
+    },
+    "--aura-neutral": {
+      "$type": "color",
+      "$value": "oklch(0.15 0.0038 248)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#0a0b0d",
+          "rgba": [
+            10,
+            11,
+            13,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-neutral-dark": {
+      "$type": "color",
+      "$value": "oklch(1 0.002 260)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.contrast-level"
+          ],
+          "srgb": "#feffff",
+          "rgba": [
+            254,
+            255,
+            255,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-neutral-light": {
+      "$type": "color",
+      "$value": "oklch(0.15 0.0038 248)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#0a0b0d",
+          "rgba": [
+            10,
+            11,
+            13,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-orange-text": {
+      "$type": "color",
+      "$value": "oklch(0.55 0.315 87)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.color.orange",
+            "aura.contrast-level"
+          ],
+          "srgb": "#bc4d00",
+          "rgba": [
+            188,
+            77,
+            0,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-purple-text": {
+      "$type": "color",
+      "$value": "oklch(0.465 0.198 290)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.color.purple",
+            "aura.contrast-level"
+          ],
+          "srgb": "#5e36bd",
+          "rgba": [
+            94,
+            54,
+            189,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-red-text": {
+      "$type": "color",
+      "$value": "oklch(0.45 0.18 25)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.color.red",
+            "aura.contrast-level"
+          ],
+          "srgb": "#a20519",
+          "rgba": [
+            162,
+            5,
+            25,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-shadow-color": {
+      "$type": "color",
+      "$value": "oklch(0.19 0.0005 248 / 0.2)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light"
+          ],
+          "srgb": "#141414",
+          "rgba": [
+            20,
+            20,
+            20,
+            0.2
+          ],
+          "alpha": 0.2
+        }
+      }
+    },
+    "--aura-shadow-m": {
+      "$type": "shadow",
+      "$value": "oklch(0.19 0.0005 248 / 0.2) 0px 8px 16px -3px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light"
+          ]
+        }
+      }
+    },
+    "--aura-shadow-s": {
+      "$type": "shadow",
+      "$value": "oklch(0.19 0.0005 248 / 0.2) 0px 2px 5px -1px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light"
+          ]
+        }
+      }
+    },
+    "--aura-shadow-xs": {
+      "$type": "shadow",
+      "$value": "oklch(0.19 0.0005 248 / 0.2) 0px 1px 4px -2px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light"
+          ]
+        }
+      }
+    },
+    "--aura-surface-color": {
+      "$type": "color",
+      "$value": "oklab(0.980078 -0.0010287 -0.00254613 / 0.5)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.surface.level",
+            "aura.surface.opacity"
+          ],
+          "srgb": "#f7f9f9",
+          "rgba": [
+            247,
+            249,
+            249,
+            0.502
+          ],
+          "alpha": 0.502
+        }
+      }
+    },
+    "--aura-surface-color-solid": {
+      "$type": "color",
+      "$value": "oklch(0.980078 0.00274609 248)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.surface.level"
+          ],
+          "srgb": "#f7f9fa",
+          "rgba": [
+            247,
+            249,
+            250,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--aura-yellow-text": {
+      "$type": "color",
+      "$value": "oklch(0.525 0.27 98)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.color.yellow",
+            "aura.contrast-level"
+          ],
+          "srgb": "#966000",
+          "rgba": [
+            150,
+            96,
+            0,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--vaadin-background-color": {
+      "$type": "color",
+      "$value": "oklch(0.980078 0.00274609 248)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.surface.level"
+          ],
+          "srgb": "#f7f9fa",
+          "rgba": [
+            247,
+            249,
+            250,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--vaadin-background-container": {
+      "$type": "color",
+      "$value": "color(srgb 0.00885433 0.0135889 0.019392 / 0.04)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#000000",
+          "rgba": [
+            0,
+            0,
+            0,
+            0.039
+          ],
+          "alpha": 0.039
+        }
+      }
+    },
+    "--vaadin-background-container-strong": {
+      "$type": "color",
+      "$value": "color(srgb 0.00885433 0.0135889 0.019392 / 0.085)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#000000",
+          "rgba": [
+            0,
+            0,
+            0,
+            0.086
+          ],
+          "alpha": 0.086
+        }
+      }
+    },
+    "--vaadin-border-color": {
+      "$type": "color",
+      "$value": "color(srgb 0.0101597 0.0134001 0.0171197 / 0.2)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#050505",
+          "rgba": [
+            5,
+            5,
+            5,
+            0.2
+          ],
+          "alpha": 0.2
+        }
+      }
+    },
+    "--vaadin-border-color-secondary": {
+      "$type": "color",
+      "$value": "color(srgb 0.0101597 0.0134001 0.0171197 / 0.08)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#000000",
+          "rgba": [
+            0,
+            0,
+            0,
+            0.078
+          ],
+          "alpha": 0.078
+        }
+      }
+    },
+    "--vaadin-focus-ring-color": {
+      "$type": "color",
+      "$value": "oklch(0.55 0.2 264)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.accent.dark",
+            "aura.accent.light"
+          ],
+          "srgb": "#3266e4",
+          "rgba": [
+            50,
+            102,
+            228,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--vaadin-gap-l": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-gap-m": {
+      "$type": "dimension",
+      "$value": "12px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-gap-s": {
+      "$type": "dimension",
+      "$value": "8px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-gap-xl": {
+      "$type": "dimension",
+      "$value": "24px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-gap-xs": {
+      "$type": "dimension",
+      "$value": "4px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-icon-baseline-font-family": {
+      "$type": "fontFamily",
+      "$value": [
+        "Instrument Sans",
+        "system-ui",
+        "ui-sans-serif",
+        "sans-serif"
+      ],
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.font.family"
+          ]
+        }
+      }
+    },
+    "--vaadin-padding-block-container": {
+      "$type": "dimension",
+      "$value": "6px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-padding-inline-container": {
+      "$type": "dimension",
+      "$value": "8px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-padding-l": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-padding-m": {
+      "$type": "dimension",
+      "$value": "12px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-padding-s": {
+      "$type": "dimension",
+      "$value": "8px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-padding-xl": {
+      "$type": "dimension",
+      "$value": "24px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-padding-xs": {
+      "$type": "dimension",
+      "$value": "4px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.size"
+          ]
+        }
+      }
+    },
+    "--vaadin-radius-l": {
+      "$type": "dimension",
+      "$value": "15px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.radius"
+          ]
+        }
+      }
+    },
+    "--vaadin-radius-m": {
+      "$type": "dimension",
+      "$value": "9px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.radius"
+          ]
+        }
+      }
+    },
+    "--vaadin-radius-s": {
+      "$type": "dimension",
+      "$value": "5px",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.base.radius"
+          ]
+        }
+      }
+    },
+    "--vaadin-text-color": {
+      "$type": "color",
+      "$value": "oklch(0.15 0.0038 248)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#0a0b0d",
+          "rgba": [
+            10,
+            11,
+            13,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    },
+    "--vaadin-text-color-disabled": {
+      "$type": "color",
+      "$value": "oklch(0.15 0.0038 248 / 0.33)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#090c0c",
+          "rgba": [
+            9,
+            12,
+            12,
+            0.329
+          ],
+          "alpha": 0.329
+        }
+      }
+    },
+    "--vaadin-text-color-secondary": {
+      "$type": "color",
+      "$value": "oklch(0.15 0.0038 248 / 0.65)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.background.dark",
+            "aura.background.light",
+            "aura.contrast-level"
+          ],
+          "srgb": "#0b0b0c",
+          "rgba": [
+            11,
+            11,
+            12,
+            0.651
+          ],
+          "alpha": 0.651
+        }
+      }
+    },
+    "--vaadin-user-color": {
+      "$type": "color",
+      "$value": "oklch(0.55 0.2 264)",
+      "$extensions": {
+        "com.vaadin.aura": {
+          "derived": true,
+          "from": [
+            "aura.color.blue"
+          ],
+          "srgb": "#3266e4",
+          "rgba": [
+            50,
+            102,
+            228,
+            1
+          ],
+          "alpha": 1
+        }
+      }
+    }
+  }
+}

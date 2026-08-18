@@ -3,6 +3,30 @@
   "namespace": "AuraReact",
   "projectName": "RC - Aura Vaadin DS",
   "projectId": "f84843b6-2bf5-44c7-a280-20202769ac02",
+
+  "$kit": "Every component exposed on window.AuraReact, and the whole surface the pane indexes. An explicit list rather than `export * from '@vaadin/react-components'`: a barrel is unreviewable, and scripts/check-showcase.mjs holds this list to the installed package so a Vaadin release that adds or removes a component fails the build instead of drifting.",
+  "kit": [
+    "Accordion", "AccordionHeading", "AccordionPanel", "AppLayout", "Avatar", "AvatarGroup",
+    "Badge", "Breadcrumbs", "BreadcrumbsItem", "Button", "Card", "Checkbox", "CheckboxGroup",
+    "ComboBox", "ConfirmDialog", "ContextMenu", "CustomField", "DatePicker", "DateTimePicker",
+    "Details", "DetailsSummary", "Dialog", "DrawerToggle", "EmailField", "FormItem", "FormLayout",
+    "FormRow", "Grid", "GridColumn", "GridColumnGroup", "GridFilter", "GridFilterColumn",
+    "GridSelectionColumn", "GridSortColumn", "GridSorter", "GridTreeColumn", "GridTreeToggle",
+    "HorizontalLayout", "Icon", "Iconset", "IntegerField", "Item", "ListBox", "LoginForm",
+    "LoginOverlay", "Markdown", "MasterDetailLayout", "MenuBar", "Message", "MessageInput",
+    "MessageList", "MultiSelectComboBox", "Notification", "NumberField", "PasswordField",
+    "Popover", "ProgressBar", "RadioButton", "RadioGroup", "RangeSlider", "Scroller", "Select",
+    "SideNav", "SideNavItem", "Slider", "SplitLayout", "Tab", "Tabs", "TabSheet", "TextArea",
+    "TextField", "TimePicker", "Tooltip", "Upload", "UploadButton", "UploadDropZone",
+    "UploadFileList", "VerticalLayout", "VirtualList"
+  ],
+
+  "$omitted": "In the kit but deliberately without a card of its own, and not demonstrated inside another card's `covers` either. Same contract as the OMITTED map in scripts/check-aura-drift.mjs: a reason each, and anything not listed here fails check-showcase.",
+  "omitted": {
+    "Iconset": "Defines an icon set from an SVG sprite; it renders nothing itself. What it produces is what the Icon card shows."
+  },
+
+  "$components": "A card each. `source` marks the six curated few-shot examples — their stories live in .design-sync/previews/ and the card ships the example plus its prompt. The rest are showcases: stories in .design-sync/showcase/, no curated example. `covers` names the kit components a card demonstrates besides its own, which is how sub-components stay accounted for without a card that would show them out of context.",
   "components": [
     {
       "name": "Button",
@@ -11,6 +35,85 @@
       "mode": "grid",
       "viewport": "1000x520",
       "subtitle": "Prominence x state x size, composed in one theme string"
+    },
+    {
+      "name": "MenuBar",
+      "group": "Actions",
+      "mode": "column",
+      "viewport": "900x420",
+      "subtitle": "Nested items, icons, overflow collapse, theme variants"
+    },
+    {
+      "name": "ContextMenu",
+      "group": "Actions",
+      "mode": "grid",
+      "viewport": "900x380",
+      "subtitle": "openOn, submenus, disabled and checked items"
+    },
+
+    {
+      "name": "TextField",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x480",
+      "subtitle": "The state matrix every field shares: required, invalid, disabled, readonly"
+    },
+    {
+      "name": "TextArea",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x480",
+      "subtitle": "Auto-grow, minRows/maxRows, character counter"
+    },
+    {
+      "name": "EmailField",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x340",
+      "subtitle": "Built-in pattern validation, inputmode email"
+    },
+    {
+      "name": "PasswordField",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x340",
+      "subtitle": "Reveal button, and when to hide it"
+    },
+    {
+      "name": "NumberField",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x400",
+      "subtitle": "Step controls, min/max, decimals, unit suffix"
+    },
+    {
+      "name": "IntegerField",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x340",
+      "subtitle": "Integer-only value, and why it is not NumberField"
+    },
+    {
+      "name": "Checkbox",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x340",
+      "subtitle": "Checked, indeterminate, disabled, helper and error text"
+    },
+    {
+      "name": "CheckboxGroup",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x420",
+      "subtitle": "Array value, vertical theme, required with error"
+    },
+    {
+      "name": "RadioGroup",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x420",
+      "subtitle": "One value, vertical theme, disabled option",
+      "covers": ["RadioButton"]
     },
     {
       "name": "Select",
@@ -29,21 +132,121 @@
       "subtitle": "String value, object value, lazy dataProvider"
     },
     {
+      "name": "MultiSelectComboBox",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x420",
+      "subtitle": "selectedItems chips, overflow summary, custom values"
+    },
+    {
+      "name": "DatePicker",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x420",
+      "subtitle": "ISO value, min/max, i18n parse/format"
+    },
+    {
+      "name": "TimePicker",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x360",
+      "subtitle": "step granularity, min/max, 24h vs locale format"
+    },
+    {
+      "name": "DateTimePicker",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x400",
+      "subtitle": "One value, two inputs, one validation"
+    },
+    {
+      "name": "Slider",
+      "group": "Forms",
+      "mode": "column",
+      "viewport": "900x460",
+      "subtitle": "min/max/step, always-visible value, min-max labels"
+    },
+    {
+      "name": "RangeSlider",
+      "group": "Forms",
+      "mode": "column",
+      "viewport": "900x460",
+      "subtitle": "Two-handle value tuple, step, disabled"
+    },
+    {
+      "name": "CustomField",
+      "group": "Forms",
+      "mode": "grid",
+      "viewport": "1000x420",
+      "subtitle": "Composing several inputs into one labelled, validatable value"
+    },
+    {
+      "name": "Upload",
+      "group": "Forms",
+      "mode": "column",
+      "viewport": "900x560",
+      "subtitle": "File list states, drop zone, custom trigger button",
+      "covers": ["UploadButton", "UploadDropZone", "UploadFileList"]
+    },
+    {
       "name": "FormLayout",
       "group": "Forms",
       "source": "components/FormLayout.tsx",
       "mode": "column",
       "viewport": "900x820",
-      "subtitle": "Responsive steps, auto-responsive, server validation"
+      "subtitle": "Responsive steps, auto-responsive, server validation",
+      "covers": ["FormItem", "FormRow"]
     },
+    {
+      "name": "LoginForm",
+      "group": "Forms",
+      "mode": "column",
+      "viewport": "900x620",
+      "subtitle": "Standalone form, error state, i18n",
+      "covers": ["LoginOverlay"]
+    },
+
     {
       "name": "Grid",
       "group": "Data",
       "source": "components/Grid.tsx",
       "mode": "column",
       "viewport": "900x560",
-      "subtitle": "Typed columns, cell renderers, footer aggregate"
+      "subtitle": "Typed columns, cell renderers, footer aggregate",
+      "covers": ["GridColumn", "GridSortColumn", "GridSelectionColumn"]
     },
+    {
+      "name": "GridTree",
+      "group": "Data",
+      "mode": "column",
+      "viewport": "900x520",
+      "subtitle": "Hierarchical dataProvider and GridTreeColumn",
+      "covers": ["GridTreeColumn", "GridTreeToggle"]
+    },
+    {
+      "name": "GridFilters",
+      "group": "Data",
+      "mode": "column",
+      "viewport": "900x620",
+      "subtitle": "Filter columns, grouped headers, standalone sorter and filter",
+      "covers": ["GridFilterColumn", "GridFilter", "GridSorter", "GridColumnGroup"]
+    },
+    {
+      "name": "VirtualList",
+      "group": "Data",
+      "mode": "column",
+      "viewport": "900x480",
+      "subtitle": "The one-column Grid you should not write"
+    },
+    {
+      "name": "ListBox",
+      "group": "Data",
+      "mode": "grid",
+      "viewport": "1000x420",
+      "subtitle": "Single and multiple selection, separators, disabled items",
+      "covers": ["Item"]
+    },
+
     {
       "name": "Dialog",
       "group": "Feedback",
@@ -52,9 +255,189 @@
       "primary": "RejectFlow",
       "viewport": "760x480",
       "subtitle": "Controlled opened + onOpenedChanged; ConfirmDialog",
-      "minHeight": 460
+      "minHeight": 460,
+      "covers": ["ConfirmDialog"]
+    },
+    {
+      "name": "Notification",
+      "group": "Feedback",
+      "mode": "single",
+      "primary": "Positions",
+      "viewport": "900x480",
+      "subtitle": "Transient confirmation: position, duration, theme, action slot",
+      "minHeight": 440
+    },
+    {
+      "name": "ProgressBar",
+      "group": "Feedback",
+      "mode": "column",
+      "viewport": "900x420",
+      "subtitle": "Determinate, indeterminate, contrast/success/error themes"
+    },
+    {
+      "name": "Tooltip",
+      "group": "Feedback",
+      "mode": "grid",
+      "viewport": "1000x400",
+      "subtitle": "Slotted into its target, manual control, position",
+      "minHeight": 380
+    },
+    {
+      "name": "Popover",
+      "group": "Feedback",
+      "mode": "single",
+      "primary": "OnClick",
+      "viewport": "900x420",
+      "subtitle": "Rich transient content anchored to a target, by id",
+      "minHeight": 400
+    },
+    {
+      "name": "MessageList",
+      "group": "Feedback",
+      "mode": "column",
+      "viewport": "900x620",
+      "subtitle": "Conversation history, avatars, and the input beneath it",
+      "covers": ["Message", "MessageInput"]
+    },
+
+    {
+      "name": "HorizontalLayout",
+      "group": "Layout",
+      "mode": "column",
+      "viewport": "900x520",
+      "subtitle": "theme spacing/padding, alignment, expanding children"
+    },
+    {
+      "name": "VerticalLayout",
+      "group": "Layout",
+      "mode": "grid",
+      "viewport": "1000x480",
+      "subtitle": "Stacking, alignment, and why gap beats margins"
+    },
+    {
+      "name": "SplitLayout",
+      "group": "Layout",
+      "mode": "column",
+      "viewport": "900x520",
+      "subtitle": "Resizable panes, orientation, initial split"
+    },
+    {
+      "name": "Scroller",
+      "group": "Layout",
+      "mode": "grid",
+      "viewport": "1000x460",
+      "subtitle": "A scroll region that keeps its own focus and padding"
+    },
+    {
+      "name": "AppLayout",
+      "group": "Layout",
+      "mode": "single",
+      "primary": "DrawerAndNavbar",
+      "viewport": "1000x560",
+      "subtitle": "navbar, drawer, DrawerToggle, primary-section theme",
+      "covers": ["DrawerToggle"]
+    },
+    {
+      "name": "MasterDetailLayout",
+      "group": "Layout",
+      "mode": "single",
+      "primary": "ListAndDetail",
+      "viewport": "1000x520",
+      "subtitle": "Master and detail as one component, stacking below a threshold"
+    },
+    {
+      "name": "Details",
+      "group": "Layout",
+      "mode": "grid",
+      "viewport": "1000x440",
+      "subtitle": "Disclosure, opened state, filled and reverse themes",
+      "covers": ["DetailsSummary"]
+    },
+    {
+      "name": "Accordion",
+      "group": "Layout",
+      "mode": "column",
+      "viewport": "900x520",
+      "subtitle": "One panel open at a time, controlled by index",
+      "covers": ["AccordionPanel", "AccordionHeading"]
+    },
+    {
+      "name": "TabSheet",
+      "group": "Layout",
+      "mode": "column",
+      "viewport": "900x480",
+      "subtitle": "Tabs and their panels as one component, with lazy content"
+    },
+    {
+      "name": "Card",
+      "group": "Layout",
+      "mode": "grid",
+      "viewport": "1000x520",
+      "subtitle": "title/subtitle/header/footer/media slots, elevation themes"
+    },
+
+    {
+      "name": "Tabs",
+      "group": "Navigation",
+      "mode": "column",
+      "viewport": "900x480",
+      "subtitle": "selected index, orientation, overflow, themes",
+      "covers": ["Tab"]
+    },
+    {
+      "name": "SideNav",
+      "group": "Navigation",
+      "mode": "grid",
+      "viewport": "1000x520",
+      "subtitle": "Nested items, icons, collapsible sections, client routing",
+      "covers": ["SideNavItem"]
+    },
+    {
+      "name": "Breadcrumbs",
+      "group": "Navigation",
+      "mode": "column",
+      "viewport": "900x340",
+      "subtitle": "Trail to the current page, last item not a link",
+      "covers": ["BreadcrumbsItem"]
+    },
+
+    {
+      "name": "Avatar",
+      "group": "Content",
+      "mode": "grid",
+      "viewport": "1000x380",
+      "subtitle": "name, abbr, img, and the accessible name it derives"
+    },
+    {
+      "name": "AvatarGroup",
+      "group": "Content",
+      "mode": "column",
+      "viewport": "900x380",
+      "subtitle": "maxItemsVisible and the overflow avatar"
+    },
+    {
+      "name": "Badge",
+      "group": "Content",
+      "mode": "grid",
+      "viewport": "1000x420",
+      "subtitle": "The six hues, pill and small themes, icon + text"
+    },
+    {
+      "name": "Icon",
+      "group": "Content",
+      "mode": "grid",
+      "viewport": "1000x420",
+      "subtitle": "vaadin: and lumo: iconsets, sizing, colour inheritance"
+    },
+    {
+      "name": "Markdown",
+      "group": "Content",
+      "mode": "column",
+      "viewport": "900x560",
+      "subtitle": "Rendering untrusted markdown with Aura typography"
     }
   ],
+
   "guidelines": [
     {
       "path": "guidelines/tokens.html",
