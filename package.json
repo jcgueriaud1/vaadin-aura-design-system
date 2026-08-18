@@ -20,6 +20,7 @@
     "check:components": "tsc --noEmit && node scripts/check-examples.mjs",
     "check:showcase": "node scripts/check-showcase.mjs",
     "check:snapshot": "node scripts/check-computed-snapshot.mjs",
+    "check:consumer": "node test/check-consumer.mjs",
     "snapshot": "node scripts/build-computed-snapshot.mjs",
     "snapshot:check": "node scripts/build-computed-snapshot.mjs --check",
     "design:build": "node scripts/build-design-bundle.mjs"
