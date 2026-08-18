@@ -76,8 +76,8 @@ roles share primitives, and moving one must not silently move the others.
 
 ### Aura's inputs are knobs, not values
 
-Aura derives 59 of its 91 properties at runtime from ~20 inputs. Change one input and everything
-downstream re-derives, in the browser, for free:
+Aura derives 66 of its 91 public properties at runtime from 22 inputs. Change one input and
+everything downstream re-derives, in the browser, for free:
 
 | Change this | And this moves with it |
 |---|---|
@@ -101,7 +101,9 @@ as designed.
 ## 4. Never hardcode a value
 
 Use these. They are the properties Aura actually defines, and the values `DesignSpecVerifier`
-expects to find when it samples a rendered screen.
+expects to find when it samples a rendered screen. What each one resolves to in the base theme is in
+`tokens/computed/aura-light.computed.json` and its dark twin — generated, so read them, never edit
+them.
 
 **Spacing** — `--vaadin-gap-xs|s|m|l|xl` between items, `--vaadin-padding-xs|s|m|l|xl` inside a
 container. Use `gap` on the layout rather than margins on children; Aura's layout components

@@ -1,0 +1,49 @@
+name: Computed snapshot
+
+# The only workflow in this repo that needs a browser. It is separate from
+# publish.yml on purpose: `npm run validate` there already fails on a stale
+# snapshot by comparing the hashes in its header, in milliseconds. Regenerating
+# it — the part that costs a Chromium download — belongs here, where it runs
+# only when something that can change the snapshot changed.
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - 'tokens/**'
+      - 'scripts/build-computed-snapshot.mjs'
+      - 'scripts/check-computed-snapshot.mjs'
+      - 'scripts/lib/aura-surface.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/snapshot.yml'
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # Chromium only: the snapshot records the engine it was read by, and the
+      # checker fails if that is not the browser the pinned Playwright launches.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Regenerates both snapshots, cross-checks every emitted colour and length
+      # against a real screenshot, and fails if the result differs from what is
+      # committed. A red run here means: run `npm run snapshot` and commit it.
+      - name: Regenerate and compare
+        run: npm run snapshot:check
