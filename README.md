@@ -160,8 +160,9 @@ Not yet built; tracked in [#7](../../issues/7).
 tokens/tokens.json     DTCG source of truth: Aura's inputs, primitive + semantic
 DESIGN.md              Global rules, written as agent policy
 components/            Canonical @vaadin/react-components examples, one per component
-scripts/               Token validation, Aura drift check, DESIGN.md name check
-test/                  Negative tests for all three
+sandbox/               Throwaway Vite app that mounts every example, to prove they render
+scripts/               Token validation, Aura drift check, DESIGN.md and example checks
+test/                  Negative tests for all four
 ```
 
 The base deliberately ships **no built CSS**. Overlays resolve base + overrides into their own
@@ -173,6 +174,29 @@ artifact with no consumer — and a generated file in git that drifts from its s
 in the repo so an agent reading the design system sees the correct pattern instead of hallucinating
 one. Grid renderers, Dialog open/close state, and FormLayout validation are the patterns agents
 most often get wrong, so those are the ones that must be exemplary.
+
+### Keeping the examples true
+
+A wrong example is worse than no example: it reads as authority and gets copied. So the claim each
+one makes is checked rather than asserted.
+
+| | |
+|---|---|
+| It compiles | `tsc --noEmit` against the exact pinned `@vaadin/react-components`. This is what rejects the inventions — `columns={[…]}` on a Grid, an untyped renderer signature — because they are type errors, not style opinions. |
+| It renders | `sandbox/` mounts every exported example. Compiling proves the props exist; only running proves the pattern works. |
+| It obeys DESIGN.md | `scripts/check-examples.mjs` re-applies the rules the document sets for application code — no Lumo, no hardcoded colour, no hardcoded spacing in a style object — to the examples themselves. |
+| It says which version it was verified against | Every file carries a `Verified against @vaadin/react-components@x.y.z` line, and the check fails if it disagrees with the pinned dependency. Examples rot silently across majors; this is what turns the bump into a review. |
+
+The render step needs a browser, so it is the one part that isn't in `npm run validate`:
+
+```bash
+cd sandbox && npm install && npm run dev
+```
+
+It earns its keep. The `FormLayout` example first shipped `fields.every((f) => f.validate())`,
+which compiles, passes every static check, and flags exactly one field at a time because `every`
+short-circuits. Only rendering it and clicking Submit showed the second field sitting there
+unmarked.
 
 ## Consuming the base
 
@@ -220,17 +244,20 @@ leverage is the reason for keeping the inputs rather than a flattened value set.
 
 ```bash
 npm install
-npm run validate       # all three checks below, in order
-npm run check:aura     # tokens still match the pinned @vaadin/aura
-npm run check:design   # every name DESIGN.md recommends still exists
-npm test               # asserts all three still reject what they should
+npm run validate         # all the checks below, in order
+npm run check:aura       # tokens still match the pinned @vaadin/aura
+npm run check:design     # every name DESIGN.md recommends still exists
+npm run check:components # examples compile against the pinned Vaadin, and obey DESIGN.md
+npm test                 # asserts they all still reject what they should
 ```
 
 `npm test` exists because these scripts are the contract's only enforcement in this repo, and a
 check that silently passes everything looks exactly like a check that works — which is precisely
 what the original token validation turned out to be. It covers dangling references, a missing
 file, an empty token set, every way the layering contract can be violated, every way the tokens
-can drift from Aura, and stale names in `DESIGN.md`.
+can drift from Aura, stale names in `DESIGN.md`, and every rule the examples can break —
+including the two failures that look like success: an examples directory with nothing in it, and
+a range-pinned Vaadin that would make every "verified against" line unfalsifiable.
 
 That last one matters more than it sounds. `DESIGN.md` is read as authority by agents, and a
 property Aura has since renamed doesn't error — it resolves to nothing and the element renders

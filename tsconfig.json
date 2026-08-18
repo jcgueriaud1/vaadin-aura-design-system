@@ -1,0 +1,20 @@
+{
+  // Type-checks components/*.tsx against the pinned @vaadin/react-components.
+  // The examples are never built or shipped as JS — the compiler is used purely
+  // as a correctness check, because a wrong example teaches the wrong API.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": false,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": []
+  },
+  "include": ["components/**/*.tsx", "components/**/*.ts"]
+}
