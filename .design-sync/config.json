@@ -1,0 +1,67 @@
+{
+  "$comment": "Durable input for scripts/build-design-bundle.mjs. Edit this, not ds-bundle/.",
+  "namespace": "AuraReact",
+  "projectName": "RC - Aura Vaadin DS",
+  "projectId": "f84843b6-2bf5-44c7-a280-20202769ac02",
+  "components": [
+    {
+      "name": "Button",
+      "group": "Actions",
+      "source": "components/Button.tsx",
+      "mode": "grid",
+      "viewport": "1000x520",
+      "subtitle": "Prominence x state x size, composed in one theme string"
+    },
+    {
+      "name": "Select",
+      "group": "Forms",
+      "source": "components/Select.tsx",
+      "mode": "grid",
+      "viewport": "1000x360",
+      "subtitle": "Short fixed option sets; items, ListBox children, required"
+    },
+    {
+      "name": "ComboBox",
+      "group": "Forms",
+      "source": "components/ComboBox.tsx",
+      "mode": "grid",
+      "viewport": "1000x360",
+      "subtitle": "String value, object value, lazy dataProvider"
+    },
+    {
+      "name": "FormLayout",
+      "group": "Forms",
+      "source": "components/FormLayout.tsx",
+      "mode": "column",
+      "viewport": "900x820",
+      "subtitle": "Responsive steps, auto-responsive, server validation"
+    },
+    {
+      "name": "Grid",
+      "group": "Data",
+      "source": "components/Grid.tsx",
+      "mode": "column",
+      "viewport": "900x560",
+      "subtitle": "Typed columns, cell renderers, footer aggregate"
+    },
+    {
+      "name": "Dialog",
+      "group": "Feedback",
+      "source": "components/Dialog.tsx",
+      "mode": "single",
+      "primary": "RejectFlow",
+      "viewport": "760x480",
+      "subtitle": "Controlled opened + onOpenedChanged; ConfirmDialog",
+      "minHeight": 460
+    }
+  ],
+  "guidelines": [
+    {
+      "path": "guidelines/tokens.html",
+      "name": "Computed token surface",
+      "group": "Foundations",
+      "viewport": "900x760",
+      "subtitle": "What Aura's inputs derive to at runtime"
+    }
+  ]
+}
