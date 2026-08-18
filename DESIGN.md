@@ -210,6 +210,8 @@ route** — nested modals trap keyboard focus and strand users; use a page.
 ## 9. React API rules
 
 These are the wrapper contracts agents most often get wrong. Verified against the shipped `.d.ts`.
+Each has a worked example in `components/`, compiled and rendered against the pinned version — read
+the example rather than reconstructing the API from memory.
 
 **Grid column renderers are component types, not elements.** `GridColumn`'s `children` and
 `renderer` are typed `ComponentType<GridBodyReactRendererProps<TItem>>`, and receive
