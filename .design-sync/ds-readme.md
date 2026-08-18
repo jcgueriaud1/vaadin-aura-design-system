@@ -114,16 +114,39 @@ rather than hand-picking darker colours. Colour is never the only signal.
 
 A `Grid` with one column is a `VirtualList`. A `Dialog` that opens another `Dialog` is a route.
 
-## Where the truth lives
+## What is here, and which files to read
+
+Every component `@vaadin/react-components` ships is on `window.AuraReact` and has a card. Cards come
+in two kinds, and the difference tells you how much weight the file carries:
+
+|  | Files in the card folder | What it is |
+|---|---|---|
+| **Example** — Button, Select, ComboBox, FormLayout, Grid, Dialog | `<Name>.tsx`, `<Name>.prompt.md`, `<Name>.stories.tsx` | A curated few-shot example. `<Name>.tsx` is checked by `tsc` against the pinned version and rendered in CI's harness; the prompt file states the API contract and its traps. These six are the patterns most often got wrong. |
+| **Showcase** — everything else | `<Name>.stories.tsx` | Stories written straight against the Vaadin API, one per variant or state worth seeing. Type-checked the same way. The header comment of the file is the guidance — read it. |
 
 - `DESIGN.md` — the checkable rules. Read it before generating UI code.
-- `components/<group>/<Name>/<Name>.prompt.md` — per-component API contract and traps. **Read this
-  before composing a component.**
+- `components/<group>/<Name>/<Name>.prompt.md` — where it exists, the API contract and its traps.
+  **Read this before composing that component.**
 - `components/<group>/<Name>/<Name>.tsx` — the canonical example, compiled and rendered against the
   pinned version. Prefer reading it over reconstructing the API from memory.
-- `components/<group>/<Name>/<Name>.stories.tsx` — how the card renders that example.
+- `components/<group>/<Name>/<Name>.stories.tsx` — every card has one. For a showcase it *is* the
+  source, and its header comment says what the component is for and what to avoid.
 - `styles.css` — the compiled Aura theme (the `@import` closure of `@vaadin/aura`, fonts inlined).
 - `tokens/tokens.json` — Aura's authorable inputs, as DTCG.
+
+### Wrapper traps the cards exist to record
+
+A React wrapper is usually a thin pass-through, and these are the places it is not — each one
+compiles, or type-checks, and then misbehaves:
+
+- Fields use **`readonly`**, not React's `readOnly`. The latter is dropped and the field stays editable.
+- `Markdown` takes its source as **children**, not the `content` prop the element has.
+- `MasterDetailLayout` requires `MasterDetailLayout.Master` / `.Detail` / `.DetailPlaceholder`
+  children and **throws** on anything else — `slot="detail"` is right for the element and wrong here.
+- A non-standard attribute on a **host** element must be spread: `<div {...{ tab: 'details' }}>`,
+  never `tab="details"`. Same for `theme` on a plain `<div>`.
+- `Grid` and `VirtualList` renderers receive `{ item, model, original }` — the row index is
+  `model.index`, and there is no top-level `index`.
 
 ## One idiomatic screen
 

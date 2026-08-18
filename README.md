@@ -159,10 +159,11 @@ Not yet built; tracked in [#7](../../issues/7).
 ```
 tokens/tokens.json     DTCG source of truth: Aura's inputs, primitive + semantic
 DESIGN.md              Global rules, written as agent policy
-components/            Canonical @vaadin/react-components examples, one per component
-sandbox/               Throwaway Vite app that mounts every example, to prove they render
-scripts/               Token validation, Aura drift check, DESIGN.md and example checks
-test/                  Negative tests for all four
+components/            Canonical @vaadin/react-components examples, six of them
+.design-sync/          Durable input for the Claude Design project: config, stories, prompts
+sandbox/               Throwaway Vite app that mounts every example and every story
+scripts/               Token validation, Aura drift check, DESIGN.md, example and coverage checks
+test/                  Negative tests for all five
 ```
 
 The base deliberately ships **no built CSS**. Overlays resolve base + overrides into their own
@@ -197,6 +198,55 @@ It earns its keep. The `FormLayout` example first shipped `fields.every((f) => f
 which compiles, passes every static check, and flags exactly one field at a time because `every`
 short-circuits. Only rendering it and clicking Submit showed the second field sitting there
 unmarked.
+
+### The design-sync project
+
+The examples answer "what is the correct API for this pattern". They do not answer "what does this
+component look like in this theme", and they never will — there are six of them and Vaadin ships
+79 components. That second question is answered by the
+[Claude Design](https://claude.ai/design) project the repo publishes to, where every component in
+`@vaadin/react-components` has a card rendered by the real component under the real Aura theme.
+
+`.design-sync/` is the durable input; `ds-bundle/` is derived and gitignored.
+
+```
+.design-sync/config.json        the kit, the cards, their groups and viewports
+.design-sync/previews/<Name>.tsx  stories driving a curated components/<Name>.tsx example
+.design-sync/showcase/<Name>.tsx  stories written straight against the Vaadin API
+.design-sync/prompts/<Name>.md    per-component API contract and traps, where one is worth writing
+```
+
+Two kinds of card, one pipeline. A config entry with a `source` is one of the six **examples** and
+ships that file and its prompt in the card folder. An entry without one is a **showcase**: stories
+and nothing else. That split is what lets the project cover every component without pretending each
+one has a curated example behind it — and keeps the six that do from being diluted by 47 that don't.
+
+```bash
+npm run design:build     # → ds-bundle/, with its own self-check
+```
+
+**Coverage is checked, not claimed.** `npm run check:showcase` walks the installed package rather
+than the config, so the three ways this can rot each fail the build:
+
+| | |
+|---|---|
+| `UNCOVERED` | in the kit, but with no card, no other card's `covers`, and no omission reason |
+| `UNTRANSCRIBED` | the package exports a component and `config.kit` doesn't list it |
+| `VANISHED` | `config.kit` lists one the package no longer exports |
+
+`covers` is how a sub-component stays accounted for without a card that would show it out of
+context — `GridTreeColumn` is demonstrated by the `GridTree` card, `FormItem` by `FormLayout`.
+Deliberate omissions live in `config.omitted` with a reason each, the same contract
+`check-aura-drift.mjs` uses. Today there is exactly one: `Iconset`, which renders nothing itself.
+
+The same check applies DESIGN.md §2 and §4 to the story files — they are shipped into the card
+folder and read as authority too — and verifies each card's `__order` still matches its exports,
+since a story missing from `__order` silently sorts to the end of the card.
+
+What the compiler cannot see, the browser can. The stories in this repo have been rendered and read,
+which is how the trap list in `.design-sync/ds-readme.md` was found: `MasterDetailLayout`'s React
+wrapper throws on `slot="detail"` children, and its detail area needs an explicit `detailSize` or it
+freezes at its content width. Both type-check perfectly.
 
 ## Consuming the base
 
@@ -248,6 +298,7 @@ npm run validate         # all the checks below, in order
 npm run check:aura       # tokens still match the pinned @vaadin/aura
 npm run check:design     # every name DESIGN.md recommends still exists
 npm run check:components # examples compile against the pinned Vaadin, and obey DESIGN.md
+npm run check:showcase   # the design-sync project still covers every Vaadin component
 npm test                 # asserts they all still reject what they should
 ```
 

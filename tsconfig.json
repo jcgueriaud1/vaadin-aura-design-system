@@ -3,9 +3,10 @@
   // The examples are never built or shipped as JS — the compiler is used purely
   // as a correctness check, because a wrong example teaches the wrong API.
   //
-  // .design-sync/previews/*.tsx is in scope for the same reason: Vite strips
-  // their types without checking them, so a preview whose props have drifted
-  // from the example would only surface as a broken card.
+  // .design-sync/previews/*.tsx and .design-sync/showcase/*.tsx are in scope for
+  // the same reason: Vite strips their types without checking them, so a story
+  // whose props have drifted — from the example it drives, or from the Vaadin
+  // API it demonstrates — would only surface as a broken card.
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
@@ -20,5 +21,10 @@
     "noEmit": true,
     "types": []
   },
-  "include": ["components/**/*.tsx", "components/**/*.ts", ".design-sync/previews/*.tsx"]
+  "include": [
+    "components/**/*.tsx",
+    "components/**/*.ts",
+    ".design-sync/previews/*.tsx",
+    ".design-sync/showcase/*.tsx"
+  ]
 }

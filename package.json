@@ -12,11 +12,12 @@
     "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
-    "validate": "node scripts/validate-tokens.mjs && node scripts/check-aura-drift.mjs && node scripts/check-design-doc.mjs && npm run check:components",
+    "validate": "node scripts/validate-tokens.mjs && node scripts/check-aura-drift.mjs && node scripts/check-design-doc.mjs && npm run check:components && npm run check:showcase",
     "test": "node --test \"test/**/*.test.mjs\"",
     "check:aura": "node scripts/check-aura-drift.mjs",
     "check:design": "node scripts/check-design-doc.mjs",
     "check:components": "tsc --noEmit && node scripts/check-examples.mjs",
+    "check:showcase": "node scripts/check-showcase.mjs",
     "design:build": "node scripts/build-design-bundle.mjs"
   },
   "peerDependencies": {
