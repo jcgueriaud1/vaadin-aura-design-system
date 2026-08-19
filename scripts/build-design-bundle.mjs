@@ -10,7 +10,7 @@
  * layout the Design System pane reads:
  *
  *   _vendor/react.js, _vendor/react-dom.js   React as window globals
- *   _ds_bundle.js                            the component kit + preview stories
+ *   _aura/aura-ds.js                         the component kit + preview stories
  *   styles.css                               @vaadin/aura, @import closure flattened, font inlined
  *   _preview/<Name>.js                       binds one component's stories to window.__dsPreview
  *   components/<Group>/<Name>/<Name>.html    the card (first line carries @dsCard)
@@ -96,8 +96,55 @@ const vaadinDir = path.join(sandbox, 'node_modules', '@vaadin');
 const reactDir = path.join(sandbox, 'node_modules', 'react');
 const reactDomDir = path.join(sandbox, 'node_modules', 'react-dom');
 
+/**
+ * `react/jsx-runtime` has to resolve to the *host* React, not to a copy of React
+ * 19's runtime baked into the bundle.
+ *
+ * `@vaadin/react-components` ships prebuilt, and 19 of its 80 wrapper modules
+ * take their hooks from `react` — external here, so the host's copy — while
+ * taking their element factory from `react/jsx-runtime`. Left alone, Rollup
+ * inlines React 19's runtime, which brands elements
+ * `Symbol.for('react.transitional.element')`. A React 18 host then rejects every
+ * element those wrappers create — "Objects are not valid as a React child",
+ * minified error #31 — from inside Grid, Select, Dialog, Notification,
+ * MasterDetailLayout and the rest. Compiling our own TSX with the classic
+ * transform does not help: the imports are in the dependency's dist, not ours.
+ *
+ * So the runtime resolves to a shim over the injected React instead.
+ * `createElement` reads `key` and `ref` out of the config and leaves
+ * `props.children` alone, which is exactly the jsx() contract, and the shim
+ * brands nothing itself — that is what lets one bundle serve a React 18 host and
+ * a React 19 host.
+ */
+const jsxShimFile = path.join(scratch, 'host-jsx-runtime.js');
+const jsxShimSource = [
+  "import * as React from 'react';",
+  'export const Fragment = React.Fragment;',
+  'export function jsx(type, props, key) {',
+  '  return React.createElement(type, key === undefined ? props : { ...props, key });',
+  '}',
+  // jsxs differs from jsx only in a dev-only check on static children, and
+  // jsxDEV only in trailing debug arguments this shim has no use for.
+  'export const jsxs = jsx;',
+  'export const jsxDEV = jsx;',
+  '',
+].join('\n');
+
+/**
+ * The shim has to be reached through `resolve.alias`, not through a plugin.
+ * Vite's own alias plugin runs ahead of every user plugin, `enforce: 'pre'`
+ * included, and its `react` entry matches by prefix — so it captures
+ * `react/jsx-runtime` for the bundled copy before a plugin's resolveId is ever
+ * asked. Alias entries are matched in order, so the runtime entries only have to
+ * come first.
+ */
+const jsxShimAlias = {
+  'react/jsx-runtime': jsxShimFile,
+  'react/jsx-dev-runtime': jsxShimFile,
+};
+
 /** Shared Vite config: one React, one @vaadin, production mode. */
-function baseConfig(react) {
+function baseConfig(react, extraAlias = {}) {
   return {
     root: sandbox,
     configFile: false,
@@ -106,7 +153,7 @@ function baseConfig(react) {
     define: { 'process.env.NODE_ENV': '"production"' },
     resolve: {
       dedupe: ['react', 'react-dom', 'lit', '@lit/reactive-element', 'lit-html'],
-      alias: { react: reactDir, 'react-dom': reactDomDir, '@vaadin': vaadinDir },
+      alias: { ...extraAlias, react: reactDir, 'react-dom': reactDomDir, '@vaadin': vaadinDir },
     },
   };
 }
@@ -119,6 +166,7 @@ async function main() {
   await rm(scratch, { recursive: true, force: true });
   await mkdir(scratch, { recursive: true });
   await mkdir(outDir, { recursive: true });
+  await writeFile(jsxShimFile, jsxShimSource);
 
   // 1. React as globals. react-dom is built with react EXTERNAL so both halves
   //    share one instance — a second copy makes every hook call throw.
@@ -159,6 +207,7 @@ async function main() {
     external: { react: 'React', 'react-dom': 'ReactDOM', 'react-dom/client': 'ReactDOM' },
     css: true,
   });
+  await guardReentry(path.join(outDir, bundleFile), namespace);
 
   // 3. Per-component files.
   await mkdir(path.join(outDir, '_preview'), { recursive: true });
@@ -204,7 +253,9 @@ async function buildLib(build, react, { entry, fileName, name, external = {}, cs
   await mkdir(path.join(outDir, path.dirname(fileName)), { recursive: true });
 
   await build({
-    ...baseConfig(react),
+    // The shim is only right where React is external: the vendor entries *are*
+    // the React copy, so there is no host to defer to.
+    ...baseConfig(react, externals.includes('react') ? jsxShimAlias : {}),
     build: {
       outDir,
       emptyOutDir: false,
@@ -234,6 +285,48 @@ async function buildLib(build, react, { entry, fileName, name, external = {}, cs
     const stat = statSync(path.join(outDir, 'styles.css'));
     if (stat.size < 1000) fail(`unexpected styles.css emitted by ${fileName}`);
   }
+}
+
+/**
+ * Makes the runtime safe to evaluate twice.
+ *
+ * A host can inject the same script more than once — a streaming render, a hot
+ * reload, two components on a page each declaring the dependency. The second
+ * evaluation used to leave the page in a worse state than the first: ~40 "loaded
+ * twice" warnings from `customElements.define`, then a hard
+ * `TypeError: Cannot redefine property: breadcrumbsComponent`, and no
+ * `window.AuraReact` at all, because that assignment is the last statement and
+ * never ran.
+ *
+ * The throw comes from upstream `defineCustomElement`, which registers each
+ * experimental component's flag with `Object.defineProperty(window.Vaadin
+ * .featureFlags, flag, { get, set })` — no `configurable: true`. Its own
+ * bookkeeping lives in a module-scoped registry, so a second evaluation sees an
+ * empty registry, retries the define against the flag that is already there, and
+ * throws. `breadcrumbsComponent` is the only such flag in the kit, which is why
+ * the failure is always that one.
+ *
+ * Nothing here can fix that upstream, and nothing here needs to: the bundle is
+ * idempotent by construction if it simply declines to run a second time. The
+ * guard is a wrapper rather than something in the entry module because ESM
+ * imports hoist — by the time entry code could check, every element has already
+ * registered itself.
+ */
+async function guardReentry(file, ns) {
+  const source = await readFile(file, 'utf8');
+  if (source.includes(`if (!window.${ns})`)) fail(`${file} is already guarded — build twice?`);
+  await writeFile(
+    file,
+    [
+      `/* Aura DS runtime. Evaluated once: a second <script> for this file is a no-op,`,
+      ` * because re-running it would retry a non-configurable defineProperty on`,
+      ` * window.Vaadin.featureFlags and throw. */`,
+      `if (!window.${ns}) {`,
+      source,
+      '}',
+      '',
+    ].join('\n'),
+  );
 }
 
 /**
@@ -579,6 +672,18 @@ async function selfCheck(components, ns) {
   if (!/@font-face/.test(stylesSource)) problems.push('styles.css has no @font-face — Instrument Sans did not make it in');
   if (/url\(["']?\.?\/?assets\//.test(stylesSource)) problems.push('styles.css references an emitted asset instead of inlining it');
   if (!bundleSource.includes('__stories')) problems.push(`${bundleFile} does not expose __stories`);
+
+  // Two properties of the runtime that are invisible in the file listing and
+  // expensive to rediscover from a host page. See jsxShimAlias and guardReentry.
+  if (bundleSource.includes('react.transitional.element')) {
+    problems.push(
+      `${bundleFile} inlines React 19's jsx-runtime — every element it creates would be ` +
+        'rejected on a React 18 host (error #31). react/jsx-runtime is not resolving to the shim.',
+    );
+  }
+  if (!bundleSource.includes(`if (!window.${ns})`)) {
+    problems.push(`${bundleFile} has no re-entry guard — a second evaluation would throw`);
+  }
 
   for (const component of components) {
     const dir = path.join(outDir, 'components', component.group, component.name);
