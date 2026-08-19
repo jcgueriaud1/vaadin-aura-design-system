@@ -42,6 +42,24 @@ const { Button, TextField, FormLayout } = window.AuraReact;
 There is **no context provider to wrap**. Without `styles.css` the components render unstyled.
 Nothing is fetched from a CDN — the bundle is self-contained.
 
+Put those `<script>` tags in `<body>`, not in `<head>`. The Vaadin elements register as they are
+imported, and one of them appends a live region to `document.body` — which is still `null` while the
+head is parsing, so a head-loaded bundle dies on `appendChild` before the kit exists.
+
+**`_ds_bundle.js` is not this bundle.** That path belongs to the Design app, which compiles the
+project's own `components/**` sources into it and replaces whatever is uploaded there. A page that
+loads it gets generated code, no `window.AuraReact`, and no error to show for it — the script 200s
+and the globals are simply missing. `_aura/aura-ds.js` is the runtime. If `window.AuraReact` is
+`undefined`, that is the first thing to check.
+
+**Bring your own React, 18 or 19.** `_aura/aura-ds.js` uses `window.React` and `window.ReactDOM` as
+it finds them: no React of its own, and no element factory of its own either, so it does not care
+which of the two versions the host renders with. `_vendor/react.js` and `_vendor/react-dom.js` are
+React 19, there for pages that have no React yet — a host that already put React on `window` should
+skip that pair rather than load it over its own copy, since the two halves have to be the same
+instance. Evaluating `_aura/aura-ds.js` a second time is a no-op, so two components on one page can
+each declare it without fighting.
+
 ## Styling idiom — `theme` attribute + custom properties, never utility classes
 
 This design system has **no CSS class vocabulary**. Style in exactly two ways.
