@@ -24,3 +24,10 @@ if (!results.every(Boolean)) return;
   field re-validates on blur and clears your message. Validate on `onChange` (blur/Enter), not on
   every keystroke.
 - Every field needs a `label` (DESIGN.md §7).
+- **Column width comes from the field, not the layout.** Both modes size their columns from
+  `--vaadin-field-default-width`, which defaults to `12em` — so a form looks narrow because the
+  *fields* are 12em, and the fix is that property on `:root`, not a `width` on the layout. It takes a
+  length: `--vaadin-field-default-width: 100%` resolves against the column it is defining and
+  collapses the field to its content width. A single field fills its container with `width: 100%` on
+  the field, or by sitting in a parent that stretches it (`display: flex; flex-direction: column`, or
+  a `VerticalLayout`).

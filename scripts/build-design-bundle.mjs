@@ -11,7 +11,9 @@
  *
  *   _vendor/react.js, _vendor/react-dom.js   React as window globals
  *   _aura/aura-ds.js                         the component kit + preview stories
- *   styles.css                               @vaadin/aura, @import closure flattened, font inlined
+ *   styles.css                               @vaadin/aura, @import closure flattened, font
+ *                                            inlined, plus the host layer (colour scheme, page
+ *                                            background, dark selector) Aura leaves to the app
  *   _preview/<Name>.js                       binds one component's stories to window.__dsPreview
  *   components/<Group>/<Name>/<Name>.html    the card (first line carries @dsCard)
  *   _ds_manifest.json                        card index, token list, themes
@@ -75,6 +77,50 @@ const upToRoot = '../../../';
  * code and no `window.AuraReact`, with no error to show for it.
  */
 const bundleFile = '_aura/aura-ds.js';
+
+/**
+ * The dark-mode selector this design system implements, and the one the manifest
+ * advertises to the Design app's theme toggle. They are the same string on
+ * purpose: a selector in `themes` that no rule matches is a switch that silently
+ * does nothing, which is how `[theme~="dark"]` shipped for as long as it did.
+ *
+ * Anchored at `:root` rather than left to match any element, because a subtree
+ * flip is only half a flip. `@vaadin/component-base` registers six colour
+ * properties as `<color>` with `CSS.registerProperty` — `--vaadin-text-color`,
+ * its `-secondary`/`-disabled` variants, `--vaadin-border-color`,
+ * `--vaadin-border-color-secondary`, `--vaadin-background-color` — and a
+ * registered custom property computes at its declaration site. Those six resolve
+ * their `light-dark()` against `:root`'s scheme, so descendants inherit an
+ * already-resolved colour: change the scheme on a `<div>` and the surfaces and
+ * accent follow while the text and borders do not.
+ */
+const darkSelector = ':root[theme~="dark"]';
+
+// Cheap to grep for, so the self-check and the re-run guard agree on one string.
+const HOST_LAYER_MARKER = 'Aura host layer';
+
+const HOST_LAYER = `
+/* --- ${HOST_LAYER_MARKER} — appended by scripts/build-design-bundle.mjs ---
+ * Covers three gaps in @vaadin/aura@${version}. See hostLayer() for why each
+ * one is here; delete a rule when Aura closes it.
+ */
+:root {
+  color-scheme: light dark;
+  background: var(--aura-app-background);
+  background-size: 100vw 100vh;
+  background-attachment: fixed;
+  color: var(--vaadin-text-color);
+}
+
+/* Aura has no dark attribute; this bridges the Design app's toggle to the real
+ * switch, which is the color-scheme property. Root-only — see darkSelector. */
+${darkSelector} { color-scheme: dark; }
+:root[theme~="light"] { color-scheme: light; }
+
+/* So an opaque body cannot hide the app background. Order-dependent: a host
+ * stylesheet that loads after this one still wins. */
+body { background: none; }
+`;
 
 /**
  * Where a card's stories come from, and what else ships beside them.
@@ -208,6 +254,7 @@ async function main() {
     css: true,
   });
   await guardReentry(path.join(outDir, bundleFile), namespace);
+  await hostLayer(path.join(outDir, 'styles.css'));
 
   // 3. Per-component files.
   await mkdir(path.join(outDir, '_preview'), { recursive: true });
@@ -285,6 +332,36 @@ async function buildLib(build, react, { entry, fileName, name, external = {}, cs
     const stat = statSync(path.join(outDir, 'styles.css'));
     if (stat.size < 1000) fail(`unexpected styles.css emitted by ${fileName}`);
   }
+}
+
+/**
+ * Appends the host layer to the emitted theme.
+ *
+ * `styles.css` is the flattened `@import` closure of `@vaadin/aura`, and three
+ * things it does not do make the difference between a design system that works
+ * on load and one every consumer has to repair:
+ *
+ * 1. Aura declares the page's colour and background on `:where(:root)`
+ *    (`src/color.css:21-24`) — zero specificity, so any host rule on `html` or
+ *    `body` wins silently. The DS then loads grey, because Aura's surfaces are
+ *    `--aura-surface-opacity: 0.5` translucent by design and mix against
+ *    whatever is actually painted behind them. Restated here at real `:root`
+ *    specificity.
+ * 2. Aura never opts into a colour scheme, so all 55 `light-dark()` calls take
+ *    the light branch. `color-scheme: light` is Aura's *documented* default —
+ *    light on load is correct for Aura and wrong for a design system that ships
+ *    both schemes, so the opt-in belongs here. The rule is the recipe from
+ *    vaadin.com/docs/latest/styling/themes/aura/color verbatim.
+ * 3. Aura defines no dark-mode selector at all — `[theme~='dark']`,
+ *    `[data-theme]` and `prefers-color-scheme` appear nowhere in `@vaadin/*` —
+ *    and the Design app's Dark toggle can only apply a selector.
+ *
+ * Every rule here covers an upstream gap; delete one when Aura closes it.
+ */
+async function hostLayer(file) {
+  const source = await readFile(file, 'utf8');
+  if (source.includes(HOST_LAYER_MARKER)) fail(`${file} already carries the host layer — build twice?`);
+  await writeFile(file, source + HOST_LAYER);
 }
 
 /**
@@ -386,7 +463,7 @@ function card(component, ns) {
 <html><head><meta charset="utf-8">
   <link rel="stylesheet" href="${upToRoot}styles.css">
   <style>
-    body{margin:0;padding:24px;background:var(--vaadin-background-color,#fff);color:var(--vaadin-text-color)${minHeight}}
+    body{margin:0;padding:24px;color:var(--vaadin-text-color)${minHeight}}
     .ds-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start}
     .ds-grid.ds-col{grid-template-columns:1fr}
     .ds-cell{border:1px solid var(--vaadin-border-color-secondary);border-radius:var(--vaadin-radius-m);padding:var(--vaadin-padding-m);min-width:0;overflow:hidden}
@@ -494,7 +571,7 @@ function tokensCard() {
 <html><head><meta charset="utf-8">
   <link rel="stylesheet" href="../styles.css">
   <style>
-    body{margin:0;padding:var(--vaadin-padding-l);background:var(--vaadin-background-color,#fff);color:var(--vaadin-text-color)}
+    body{margin:0;padding:var(--vaadin-padding-l);color:var(--vaadin-text-color)}
     h2{font-size:var(--aura-font-size-l);line-height:var(--aura-line-height-l);margin:var(--vaadin-gap-l) 0 var(--vaadin-gap-xs)}
     h2:first-child{margin-top:0}
     p.note{color:var(--vaadin-text-color-secondary);font-size:var(--aura-font-size-s);line-height:var(--aura-line-height-s);max-width:70ch;margin:0 0 var(--vaadin-gap-m)}
@@ -634,7 +711,7 @@ async function manifest(components, guidelines, ns, ver) {
     hasThumbnailHtml: false,
     globalCssPaths: ['styles.css'],
     tokens: flattenTokens(tokens),
-    themes: [{ selector: '[theme~="dark"]', label: 'Dark' }],
+    themes: [{ selector: darkSelector, label: 'Dark' }],
     fonts: [],
     brandFonts: [
       { family: 'Instrument Sans', status: 'ok', tokens: ['--aura-font-family'], path: 'styles.css' },
@@ -672,6 +749,29 @@ async function selfCheck(components, ns) {
   if (!/@font-face/.test(stylesSource)) problems.push('styles.css has no @font-face — Instrument Sans did not make it in');
   if (/url\(["']?\.?\/?assets\//.test(stylesSource)) problems.push('styles.css references an emitted asset instead of inlining it');
   if (!bundleSource.includes('__stories')) problems.push(`${bundleFile} does not expose __stories`);
+
+  // Three properties of the theme that no file listing shows and that a consumer
+  // pays for in a whole afternoon of grey screens. See hostLayer().
+  if (!stylesSource.includes('color-scheme: light dark')) {
+    problems.push(
+      'styles.css never opts into a colour scheme — every light-dark() would take the light ' +
+        'branch and the dark half of the theme would be unreachable',
+    );
+  }
+  if (!stylesSource.includes(darkSelector)) {
+    problems.push(`styles.css has no ${darkSelector} rule — the manifest's Dark toggle would do nothing`);
+  }
+  // Anchored on the whole block rather than on any one declaration inside it.
+  // `background: var(--aura-app-background)` looks like the obvious thing to
+  // grep for and is useless: Aura's login-overlay rule already contains that
+  // substring, so the check would pass with no host layer at all.
+  if (!stylesSource.endsWith(HOST_LAYER)) {
+    problems.push(
+      'styles.css does not end with the host layer — the app background would only be declared ' +
+        "under Aura's :where(:root), which any host rule beats, and the 50%-translucent surfaces " +
+        'would mix against the host instead',
+    );
+  }
 
   // Two properties of the runtime that are invisible in the file listing and
   // expensive to rediscover from a host page. See jsxShimAlias and guardReentry.

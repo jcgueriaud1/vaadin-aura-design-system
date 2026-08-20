@@ -89,12 +89,28 @@ everything downstream re-derives, in the browser, for free:
 Prefer moving a knob over overriding a derived property. Setting `--vaadin-radius-m` directly
 changes one radius; setting `aura.base.radius` keeps the scale coherent.
 
+**A knob only works on the root.** Aura derives from these inputs inside rules selected by
+`:where(:root), :where(:host)`, so a knob set on a subtree inherits into a region where nothing
+re-derives and has no effect at all — no warning, no fallback, just the old value. `--aura-base-size`
+and `--aura-base-font-size` are the one exception, because spacing and type are also derived under
+`:where([theme])`; that is how the density variants work. `--aura-base-radius` and
+`--aura-contrast-level` have no such rule and are root-or-nothing.
+
+**Rule:** an Aura input may be assigned on `:root` / `<html>` (or a shadow `:host`) only. An
+assignment anywhere else is a defect — it is greppable, and it reads as working code.
+
 ### Text and border colours are not settable
 
 There is no token for text colour. Aura derives `--vaadin-text-color`, its secondary and disabled
 variants, and both border colours from `aura.background.*` and `aura.contrast-level`. To make text
 darker, raise `aura.contrast-level` — do not assign a colour. This surprises people; it is working
 as designed.
+
+Which of the two backgrounds it derives from is chosen by the CSS `color-scheme` property: every dark
+value in Aura is the second branch of a `light-dark()`, and there is no dark class or dark attribute
+to set. `color-scheme` is therefore the third root-only input, and the strictest of them — those six
+colour properties are registered as `<color>` with `CSS.registerProperty`, so they resolve at their
+declaration site and a subtree that changes the scheme gets dark surfaces with light text.
 
 ---
 
