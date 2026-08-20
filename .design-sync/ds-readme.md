@@ -26,7 +26,7 @@ import { Button } from '@vaadin/react-components/Button.js';
 line, behind the `latest-25` tag. Getting this wrong is quiet: the app builds, the components
 render, and nothing looks like Aura.
 
-**On a canvas page in this project** — two tags, then components off a global:
+**On a canvas page in this project** — four tags, then components off a global:
 
 ```html
 <link rel="stylesheet" href="styles.css">   <!-- the compiled Aura theme, fonts inlined -->
@@ -41,6 +41,15 @@ const { Button, TextField, FormLayout } = window.AuraReact;
 
 There is **no context provider to wrap**. Without `styles.css` the components render unstyled.
 Nothing is fetched from a CDN — the bundle is self-contained.
+
+**Do not paint `body`.** Aura's surfaces are 50% translucent by design — a `Card`, a `Grid`, an input
+all mix with what is behind them — and what is meant to be behind them is the app background, which
+`styles.css` paints on `:root`. An opaque `body` hides it and every surface flattens into the same
+grey: that is what a themed screen with no contrast looks like. `styles.css` sets
+`body { background: none }` for this reason, but it is only a default — a `body { background: … }` in
+your own page wins on order, so the fix is to not write one. If you need a solid backdrop, move
+`--aura-background-color-light` / `-dark` instead, or set `--aura-surface-opacity: 1` to make the
+surfaces opaque on purpose.
 
 Put those `<script>` tags in `<body>`, not in `<head>`. The Vaadin elements register as they are
 imported, and one of them appends a live region to `document.body` — which is still `null` while the
@@ -86,6 +95,12 @@ classes: `.aura-accent-red|green|yellow|blue|orange|purple|neutral`, plus `.aura
 - **Spacing** — `--vaadin-gap-xs|s|m|l|xl` between items, `--vaadin-padding-xs|s|m|l|xl` inside a
   container. Use `gap` on the layout, not margins on children.
 - **Radius** — `--vaadin-radius-s|m|l`. You rarely set it: components already pick a step.
+- **Field width** — fields are `12em` wide by default, from `--vaadin-field-default-width`. Move that
+  property to change the default everywhere, and note it also sets `FormLayout`'s column width. It
+  takes a length, **not a percentage**: `--vaadin-field-default-width: 100%` resolves against the
+  column it is defining and collapses the field to its content width instead of filling. To make one
+  field fill its container, give the field `width: 100%`, or put it in a parent that stretches it — a
+  `display: flex; flex-direction: column`, or a `VerticalLayout`, which is the idiomatic answer.
 - **Type** — `--aura-font-size-xs|s|m|l|xl` paired with the *matching*
   `--aura-line-height-xs|s|m|l|xl`; never mix steps. Weights
   `--aura-font-weight-regular|medium|semibold`. `h1`–`h6` are already styled — pick the right level
@@ -106,9 +121,60 @@ That is why you move a knob (`--aura-base-size`, `--aura-base-radius`, `--aura-c
 instead of assigning a value — the whole system re-derives together. `tokens/tokens.json` holds the
 inputs; `guidelines/tokens.html` shows what they derive to.
 
+**Knobs go on the root.** They look like ordinary custom properties, and they inherit like ordinary
+custom properties, but what they feed does not: Aura derives from them inside rules whose selector is
+`:where(:root), :where(:host)`, so a knob set further down the tree inherits into a subtree where
+nothing re-derives, and changes nothing. Setting `--aura-contrast-level: 3` on a `<div>` is inert —
+silently, which is the part that costs time. One partial exception, and it is the mechanism behind the
+density variants: spacing and type *are* re-derived under `:where([theme])`, so `--aura-base-size` and
+`--aura-base-font-size` do take effect on an element carrying a `theme` attribute. Radius does not
+follow — `--vaadin-radius-s|m|l` derive under `:where(:root), :where(:host)` only — so
+`--aura-base-radius` is root-or-nothing, as is `--aura-contrast-level`.
+
 ## Dark mode
 
-Set both attributes on the root: `<html theme="dark" data-theme="dark">`.
+Dark mode is the CSS `color-scheme` property, and nothing else. Aura has no dark stylesheet and no
+dark class: every dark value is the second branch of a `light-dark()` call, and `light-dark()` reads
+the element's used `color-scheme`. `styles.css` already opts in, so **a page follows the operating
+system with no work at all**:
+
+```css
+:root { color-scheme: light dark; }   /* already in styles.css */
+```
+
+To force one scheme, set `color-scheme` on the root, or use the attribute this bundle adds for the
+Design app's Dark toggle:
+
+```html
+<html theme="dark">     <!-- or: :root { color-scheme: dark } -->
+```
+
+Put it on the root and nowhere else. Six colour properties — `--vaadin-text-color`, its secondary and
+disabled variants, both border colours, and `--vaadin-background-color` — are registered as `<color>`
+via `CSS.registerProperty`, so they resolve their `light-dark()` where they are *declared*, at
+`:root`, and descendants inherit an already-resolved colour. Flip the scheme on a `<div>` and the
+surfaces and accent go dark while the text and borders stay light: a half-dark subtree, measured, not
+theorised.
+
+`data-theme` is not a Vaadin API and never was — if you have seen it recommended for Aura, that was
+wrong. In Flow the equivalents are the `@ColorScheme` annotation and `Page::setColorScheme()`.
+
+Two dark values are authorable, and everything else derives from them:
+
+```css
+:root {
+  --aura-background-color-dark: oklch(0.2 0.01 260);   /* the dark page colour */
+  --aura-accent-color-dark: var(--aura-blue);          /* the dark accent */
+}
+```
+
+Text, secondary text, disabled text, both border colours, the surfaces, accent text and contrast, and
+the focus ring are all derived from those two plus `--aura-contrast-level`. There is no dark palette
+to fill in.
+
+Aura's own two `color-scheme` knobs are for overlays, not for the page:
+`--aura-content-color-scheme` covers the App Layout content area and `--aura-notification-color-scheme`
+covers notifications, so a dialog or a toast can hold a different scheme than the page behind it.
 
 ## Accessibility, non-optionally
 

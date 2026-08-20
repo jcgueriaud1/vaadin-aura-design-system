@@ -327,6 +327,32 @@ one has a curated example behind it — and keeps the six that do from being dil
 npm run design:build     # → ds-bundle/, with its own self-check
 ```
 
+**What a canvas page in that project has to load**, in `<body>` and in this order — worth stating
+here because the bundle's own README is the only other place that says it, and a reader who wires a
+page up from this repo never sees that file:
+
+```html
+<link rel="stylesheet" href="styles.css">   <!-- Aura, plus the host layer below -->
+<script src="_vendor/react.js"></script>    <!-- skip both if the host already has React -->
+<script src="_vendor/react-dom.js"></script>
+<script src="_aura/aura-ds.js"></script>    <!-- exposes window.AuraReact.* -->
+```
+
+`_ds_bundle.js` is **not** the runtime, however much the path suggests it: that name belongs to the
+Design app, which compiles the project's own `components/**` into it and overwrites anything uploaded
+there. A page loading it gets a 200, no `window.AuraReact`, and no error. `<head>` fails too —
+`@vaadin/a11y-base` appends a live region to `document.body` at import time.
+
+`styles.css` is Aura's `@import` closure plus a **host layer** the converter appends, because three
+things Aura leaves to the application are exactly the three a design system cannot leave to its
+consumers: it opts into `color-scheme: light dark` (Aura's documented default is `light`, so without
+this the dark half of the theme is unreachable), restates the page background at real `:root`
+specificity (Aura declares it under `:where(:root)`, which any host rule beats — and since Aura's
+surfaces are 50% translucent by design, losing it means every surface mixes against the host and the
+whole screen goes flat grey), and adds the `:root[theme~="dark"]` rule that `_ds_manifest.json`
+advertises to the Design app's Dark toggle. Aura defines no dark selector of its own; `color-scheme`
+is the only switch. See `hostLayer()` for which upstream gap each rule covers.
+
 **Coverage is checked, not claimed.** `npm run check:showcase` walks the installed package rather
 than the config, so the three ways this can rot each fail the build:
 
